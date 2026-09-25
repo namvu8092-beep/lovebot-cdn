@@ -226,6 +226,133 @@
             cursor: pointer;
         }
 
+        /* Floating Vertical Volume HUD (Mép phải màn hình) */
+        .floating-vol-hud {
+            position: fixed;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 999;
+            background: rgba(18, 22, 42, 0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 30px;
+            padding: 12px 6px;
+            width: 48px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55), 0 0 20px var(--primary-glow);
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .floating-vol-hud:hover {
+            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65), 0 0 28px rgba(255, 59, 129, 0.4);
+            border-color: rgba(255, 59, 129, 0.4);
+        }
+        .vol-hud-btn {
+            background: none;
+            border: none;
+            font-size: 19px;
+            cursor: pointer;
+            padding: 2px;
+            line-height: 1;
+            transition: transform 0.15s;
+        }
+        .vol-hud-btn:active { transform: scale(0.85); }
+        .vol-hud-val {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+            letter-spacing: -0.3px;
+        }
+        .vol-track-container {
+            position: relative;
+            width: 16px;
+            height: 140px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 4px 0;
+        }
+        .vol-track-bg {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        .vol-track-fill {
+            width: 100%;
+            background: linear-gradient(to top, #ff3b81, #d946ef);
+            border-radius: 6px;
+            transition: height 0.05s ease-out;
+            box-shadow: 0 0 10px rgba(255, 59, 129, 0.6);
+        }
+        .vol-track-thumb {
+            position: absolute;
+            left: 50%;
+            transform: translate(-50%, 50%);
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid #ff3b81;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 10px var(--primary-glow);
+            pointer-events: none;
+            transition: bottom 0.05s ease-out;
+        }
+        .vol-hud-stepper {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 100%;
+            align-items: center;
+        }
+        .vol-step-btn {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-dim);
+            font-size: 13px;
+            font-weight: 700;
+            width: 30px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .vol-step-btn:hover {
+            background: rgba(255, 59, 129, 0.2);
+            color: #fff;
+            border-color: rgba(255, 59, 129, 0.4);
+        }
+        .vol-step-btn:active { transform: scale(0.9); }
+
+        @media (max-width: 600px) {
+            .floating-vol-hud {
+                right: 8px;
+                padding: 10px 4px;
+                width: 44px;
+            }
+            .vol-track-container {
+                height: 115px;
+            }
+        }
+
         /* Speak & Ask Section */
         .speak-box { display: flex; flex-direction: column; gap: 10px; }
         .input-group { display: flex; gap: 8px; }
@@ -955,16 +1082,6 @@
                         </div>
                     </div>
 
-                    <!-- Thanh âm lượng loa Gấu tiện lợi -->
-                    <div id="musicVolBox" style="margin-top: 12px; padding: 10px 14px; background: rgba(0,0,0,0.25); border-radius: 14px; border: 1px solid var(--card-border);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <span style="font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
-                                🔊 Âm lượng loa Gấu bông:
-                            </span>
-                            <span id="musicVolVal" style="font-size: 12px; font-weight: 700; color: var(--primary);">80%</span>
-                        </div>
-                        <input type="range" min="0" max="100" value="80" id="musicVolumeSlider" oninput="changeVolume(this.value)">
-                    </div>
 
                     <!-- Bộ lọc Mood & Thêm bài hát -->
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; margin-bottom: 8px;">
@@ -1032,6 +1149,26 @@
 
     <!-- Toast notification -->
     <div id="toast">Đã gửi thành công! 💖</div>
+
+    <!-- Floating Vertical Volume HUD (Thanh âm lượng dọc mép phải màn hình) -->
+    <div id="floatingVolHud" class="floating-vol-hud" title="Kéo hoặc chạm để chỉnh âm lượng gấu">
+        <button type="button" id="volHudMuteBtn" class="vol-hud-btn" onclick="toggleMuteVolume()" title="Bật / Tắt tiếng">🔊</button>
+        <span id="volHudValue" class="vol-hud-val">80%</span>
+        
+        <div class="vol-track-container" id="volTrackContainer" 
+             onmousedown="startVolDrag(event)" 
+             ontouchstart="startVolDrag(event)">
+            <div class="vol-track-bg">
+                <div class="vol-track-fill" id="volTrackFill" style="height: 80%;"></div>
+            </div>
+            <div class="vol-track-thumb" id="volTrackThumb" style="bottom: 80%;"></div>
+        </div>
+
+        <div class="vol-hud-stepper">
+            <button type="button" class="vol-step-btn" onclick="stepVolume(5)" title="Tăng âm lượng">＋</button>
+            <button type="button" class="vol-step-btn" onclick="stepVolume(-5)" title="Giảm âm lượng">－</button>
+        </div>
+    </div>
 
     <script>
         const TOPIC_CMD = "lovebot_coby88_99/cmd";
@@ -1250,15 +1387,8 @@
                     }
                 }
 
-                if (data.volume !== undefined && !isVolumeDragging) {
-                    const v1 = document.getElementById('volumeSlider');
-                    const v2 = document.getElementById('musicVolumeSlider');
-                    const l1 = document.getElementById('volumeValue');
-                    const l2 = document.getElementById('musicVolVal');
-                    if (v1) v1.value = data.volume;
-                    if (v2) v2.value = data.volume;
-                    if (l1) l1.innerText = data.volume + '%';
-                    if (l2) l2.innerText = data.volume + '%';
+                if (data.volume !== undefined && !isVolumeDragging && !isVolHudDragging) {
+                    updateVolumeUI(data.volume);
                 }
             } catch (e) {
                 console.error("MQTT Parse error", e);
@@ -1427,8 +1557,26 @@
             sendSpeak();
         }
 
-        function changeVolume(val) {
-            isVolumeDragging = true;
+        let lastNonZeroVolume = 80;
+        let isVolHudDragging = false;
+
+        function updateVolumeUI(val) {
+            val = Math.max(0, Math.min(100, parseInt(val) || 0));
+            
+            const hudVal = document.getElementById('volHudValue');
+            const hudFill = document.getElementById('volTrackFill');
+            const hudThumb = document.getElementById('volTrackThumb');
+            const hudBtn = document.getElementById('volHudMuteBtn');
+
+            if (hudVal) hudVal.innerText = val + '%';
+            if (hudFill) hudFill.style.height = val + '%';
+            if (hudThumb) hudThumb.style.bottom = val + '%';
+            if (hudBtn) {
+                if (val === 0) hudBtn.innerText = '🔇';
+                else if (val < 40) hudBtn.innerText = '🔉';
+                else hudBtn.innerText = '🔊';
+            }
+
             const v1 = document.getElementById('volumeSlider');
             const v2 = document.getElementById('musicVolumeSlider');
             const l1 = document.getElementById('volumeValue');
@@ -1438,12 +1586,72 @@
             if (l1) l1.innerText = val + '%';
             if (l2) l2.innerText = val + '%';
 
+            if (val > 0) lastNonZeroVolume = val;
+        }
+
+        function changeVolume(val) {
+            val = Math.max(0, Math.min(100, parseInt(val) || 0));
+            isVolumeDragging = true;
+            updateVolumeUI(val);
+
             clearTimeout(volumeDebounce);
             volumeDebounce = setTimeout(() => {
-                publishCmd({ action: "volume", value: parseInt(val) });
+                publishCmd({ action: "volume", value: val });
                 setTimeout(() => { isVolumeDragging = false; }, 800);
-            }, 100);
+            }, 80);
         }
+
+        function stepVolume(delta) {
+            const current = parseInt(document.getElementById('volHudValue')?.innerText) || 80;
+            changeVolume(current + delta);
+        }
+
+        function toggleMuteVolume() {
+            const current = parseInt(document.getElementById('volHudValue')?.innerText) || 0;
+            if (current > 0) {
+                changeVolume(0);
+            } else {
+                changeVolume(lastNonZeroVolume || 80);
+            }
+        }
+
+        function handleVolPointerMove(e) {
+            const container = document.getElementById('volTrackContainer');
+            if (!container) return;
+            const rect = container.getBoundingClientRect();
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            // 0% ở đáy container, 100% ở đỉnh container
+            let pct = 1.0 - ((clientY - rect.top) / rect.height);
+            pct = Math.max(0, Math.min(1, pct));
+            const val = Math.round(pct * 100);
+            changeVolume(val);
+        }
+
+        function startVolDrag(e) {
+            isVolHudDragging = true;
+            handleVolPointerMove(e);
+            
+            const onMove = (ev) => {
+                if (ev.cancelable) ev.preventDefault();
+                handleVolPointerMove(ev);
+            };
+            const onUp = () => {
+                isVolHudDragging = false;
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onUp);
+                window.removeEventListener('touchmove', onMove);
+                window.removeEventListener('touchend', onUp);
+            };
+
+            window.addEventListener('mousemove', onMove, { passive: false });
+            window.addEventListener('mouseup', onUp);
+            window.addEventListener('touchmove', onMove, { passive: false });
+            window.addEventListener('touchend', onUp);
+        }
+
+        // Khởi tạo mức âm lượng mặc định 80%
+        updateVolumeUI(80);
 
         // ================= Quản lý Sổ tay tình yêu (LocalStorage) =================
         let chatHistory = JSON.parse(localStorage.getItem('lovebot_history') || "[]");
