@@ -242,8 +242,8 @@
 
         /* Nút quả bóng gấu nổi chính */
         .bear-bubble-btn {
-            width: 58px;
-            height: 58px;
+            width: 62px;
+            height: 62px;
             border-radius: 50%;
             background: radial-gradient(circle at 35% 30%, #3b1d5a 0%, #15182e 80%);
             border: 2px solid rgba(255, 59, 129, 0.55);
@@ -272,13 +272,129 @@
             50% { transform: translateY(-7px); }
         }
 
-        .bear-bubble-img {
-            width: 50px;
-            height: 50px;
-            object-fit: contain;
+        .bear-svg {
+            width: 54px;
+            height: 54px;
+            overflow: visible;
             pointer-events: none;
-            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.35));
-            border-radius: 50%;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.35));
+        }
+
+        /* Animations bên trong Bé Gấu */
+        @keyframes bearBlink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            94%, 96% { transform: scaleY(0.08); }
+        }
+        .bear-eye-blink {
+            transform-origin: 60px 58px;
+            animation: bearBlink 3.8s ease-in-out infinite;
+        }
+
+        @keyframes earWiggleL {
+            0%, 85%, 100% { transform: rotate(0deg); }
+            90% { transform: rotate(-8deg); }
+            95% { transform: rotate(4deg); }
+        }
+        @keyframes earWiggleR {
+            0%, 85%, 100% { transform: rotate(0deg); }
+            90% { transform: rotate(8deg); }
+            95% { transform: rotate(-4deg); }
+        }
+        .bear-ear.left {
+            transform-origin: 28px 34px;
+            animation: earWiggleL 4.5s ease-in-out infinite;
+        }
+        .bear-ear.right {
+            transform-origin: 92px 34px;
+            animation: earWiggleR 4.5s ease-in-out infinite;
+        }
+
+        @keyframes blushGlow {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.15); }
+        }
+        .bear-cheek {
+            animation: blushGlow 2.5s ease-in-out infinite;
+        }
+
+        @keyframes heartPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.22); }
+        }
+        .heart-pulse-eye {
+            transform-origin: 60px 60px;
+            animation: heartPulse 0.9s ease-in-out infinite;
+        }
+
+        @keyframes tearDrip {
+            0% { opacity: 0; transform: translateY(-3px); }
+            40% { opacity: 1; }
+            80% { opacity: 1; transform: translateY(8px); }
+            100% { opacity: 0; transform: translateY(12px); }
+        }
+        .bear-tears path {
+            animation: tearDrip 1.6s ease-in-out infinite;
+        }
+        .bear-tears path:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        @keyframes singBounce {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.3); }
+        }
+        .sing-bounce {
+            transform-origin: 60px 80px;
+            animation: singBounce 0.6s ease-in-out infinite;
+        }
+
+        /* Bong bóng lời thoại dễ thương */
+        .bear-speech-bubble {
+            position: absolute;
+            bottom: 74px;
+            right: 0;
+            background: rgba(255, 255, 255, 0.96);
+            color: #c2185b;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 14px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 12px rgba(255,59,129,0.3);
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(8px) scale(0.85);
+            transition: opacity 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1001;
+        }
+        .bear-speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            right: 24px;
+            border-width: 6px 6px 0;
+            border-style: solid;
+            border-color: rgba(255, 255, 255, 0.96) transparent;
+            display: block;
+            width: 0;
+        }
+        .bear-speech-bubble.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        /* Tim bay khi chạm vào bé gấu */
+        .bear-pop-heart {
+            position: absolute;
+            top: 5px;
+            font-size: 18px;
+            pointer-events: none;
+            animation: bearHeartFly 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            z-index: 1002;
+        }
+        @keyframes bearHeartFly {
+            0% { opacity: 1; transform: translateY(0) scale(0.6); }
+            100% { opacity: 0; transform: translateY(-55px) scale(1.3); }
         }
 
         /* Huy hiệu % âm lượng nhỏ xíu dưới quả bóng gấu */
@@ -397,12 +513,12 @@
                 bottom: 85px;
             }
             .bear-bubble-btn {
-                width: 52px;
-                height: 52px;
+                width: 56px;
+                height: 56px;
             }
-            .bear-bubble-img {
-                width: 44px;
-                height: 44px;
+            .bear-svg {
+                width: 48px;
+                height: 48px;
             }
             .bear-vol-panel {
                 width: 195px;
@@ -1207,11 +1323,167 @@
     <!-- Toast notification -->
     <div id="toast">Đã gửi thành công! 💖</div>
 
-    <!-- Bong bóng Gấu bông chỉnh âm lượng siêu cute (Floating Bear Bubble) -->
+    <!-- Bong bóng Gấu bông biểu cảm sống động chỉnh âm lượng (Interactive Animated Bear Bubble) -->
     <div id="bearBubbleContainer" class="bear-bubble-container">
-        <!-- Nút quả bóng gấu nổi -->
-        <div id="bearBubbleBtn" class="bear-bubble-btn" onclick="toggleBearVolPanel(event)" title="Chạm để chỉnh âm lượng Bé Gấu 💖">
-            <img src="bear_bubble.png" alt="LoveBot Bear" class="bear-bubble-img" id="bearBubbleImg">
+        <!-- Bong bóng lời thoại dễ thương của bé gấu -->
+        <div id="bearSpeechBubble" class="bear-speech-bubble">Chào anh Coby & Hà An 💖</div>
+
+        <!-- Nút quả bóng gấu nổi với SVG sống động -->
+        <div id="bearBubbleBtn" class="bear-bubble-btn" onclick="handleBearBubbleClick(event)" title="Chạm để tương tác và chỉnh âm lượng Bé Gấu 💖">
+            <svg id="bearSvg" class="bear-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="gFur" cx="40%" cy="35%" r="65%">
+                        <stop offset="0%" stop-color="#ffbe85"/>
+                        <stop offset="60%" stop-color="#e28b45"/>
+                        <stop offset="100%" stop-color="#b66324"/>
+                    </radialGradient>
+                    <radialGradient id="gInner" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#ffb3c6"/>
+                        <stop offset="100%" stop-color="#ff6b8b"/>
+                    </radialGradient>
+                    <linearGradient id="gHeadphone" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#ff3b81"/>
+                        <stop offset="100%" stop-color="#c2185b"/>
+                    </linearGradient>
+                    <radialGradient id="gCushion" cx="35%" cy="35%" r="65%">
+                        <stop offset="0%" stop-color="#ffffff"/>
+                        <stop offset="30%" stop-color="#ff80ab"/>
+                        <stop offset="85%" stop-color="#f50057"/>
+                    </radialGradient>
+                    <radialGradient id="gSnout" cx="50%" cy="30%" r="70%">
+                        <stop offset="0%" stop-color="#ffffff"/>
+                        <stop offset="80%" stop-color="#ffeedb"/>
+                        <stop offset="100%" stop-color="#ffdcb5"/>
+                    </radialGradient>
+                    <radialGradient id="gCheek" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="rgba(255, 64, 129, 0.85)"/>
+                        <stop offset="70%" stop-color="rgba(255, 64, 129, 0.35)"/>
+                        <stop offset="100%" stop-color="rgba(255, 64, 129, 0)"/>
+                    </radialGradient>
+                    <linearGradient id="tearGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#a5f3fc"/>
+                        <stop offset="100%" stop-color="#0284c7"/>
+                    </linearGradient>
+                </defs>
+
+                <!-- Tai nghe vắt ngang đầu -->
+                <path d="M 22 55 A 40 40 0 0 1 98 55" fill="none" stroke="url(#gHeadphone)" stroke-width="8" stroke-linecap="round"/>
+                <path d="M 26 50 A 36 36 0 0 1 94 50" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"/>
+
+                <!-- Đôi tai lắc lư nhẹ -->
+                <g id="bearEarL" class="bear-ear left">
+                    <circle cx="28" cy="34" r="15" fill="url(#gFur)" stroke="#9c4d16" stroke-width="0.8"/>
+                    <circle cx="28" cy="34" r="8.5" fill="url(#gInner)"/>
+                </g>
+                <g id="bearEarR" class="bear-ear right">
+                    <circle cx="92" cy="34" r="15" fill="url(#gFur)" stroke="#9c4d16" stroke-width="0.8"/>
+                    <circle cx="92" cy="34" r="8.5" fill="url(#gInner)"/>
+                </g>
+
+                <!-- Đầu tròn mũm mĩm -->
+                <ellipse cx="60" cy="65" rx="42" ry="38" fill="url(#gFur)"/>
+                <ellipse cx="60" cy="40" rx="22" ry="9" fill="rgba(255,255,255,0.2)"/>
+
+                <!-- Đệm tai nghe 2 bên hình trái tim -->
+                <g>
+                    <ellipse cx="18" cy="62" rx="8" ry="15" fill="url(#gCushion)" stroke="#ad1457" stroke-width="1"/>
+                    <path d="M 18 59 A 2.2 2.2 0 0 0 14 62 Q 18 67 18 67 Q 18 67 22 62 A 2.2 2.2 0 0 0 18 59 Z" fill="#ffffff" opacity="0.9"/>
+                </g>
+                <g>
+                    <ellipse cx="102" cy="62" rx="8" ry="15" fill="url(#gCushion)" stroke="#ad1457" stroke-width="1"/>
+                    <path d="M 102 59 A 2.2 2.2 0 0 0 98 62 Q 102 67 102 67 Q 102 67 106 62 A 2.2 2.2 0 0 0 102 59 Z" fill="#ffffff" opacity="0.9"/>
+                </g>
+
+                <!-- Đôi má hồng phấn phát sáng -->
+                <ellipse id="bearCheekL" class="bear-cheek" cx="34" cy="74" rx="10" ry="6.5" fill="url(#gCheek)"/>
+                <ellipse id="bearCheekR" class="bear-cheek" cx="86" cy="74" rx="10" ry="6.5" fill="url(#gCheek)"/>
+                <circle cx="33" cy="73" r="1.1" fill="#fff" opacity="0.8"/>
+                <circle cx="87" cy="73" r="1.1" fill="#fff" opacity="0.8"/>
+
+                <!-- Mõm và mũi gấu -->
+                <ellipse cx="60" cy="76" rx="20" ry="14" fill="url(#gSnout)" stroke="#e29f6d" stroke-width="0.8"/>
+                <path d="M 55 70 C 55 68 58 67 60 69 C 62 67 65 68 65 70 C 65 73 60 76 60 76 C 60 76 55 73 55 70 Z" fill="#381b0f"/>
+                <circle cx="58.5" cy="69.5" r="1" fill="#ffffff" opacity="0.9"/>
+
+                <!-- === CÁC BIỂU CẢM CỦA MẮT (EYES) === -->
+                <!-- 1. Mắt bình thường (Chớp mắt tự nhiên) -->
+                <g id="bearEyesNormal" class="bear-eye-group">
+                    <g class="bear-eye-blink">
+                        <circle cx="43" cy="58" r="7.5" fill="#211019"/>
+                        <circle cx="41" cy="55.5" r="3.2" fill="#ffffff"/>
+                        <circle cx="45" cy="60" r="1.4" fill="#ffffff"/>
+                        <circle cx="77" cy="58" r="7.5" fill="#211019"/>
+                        <circle cx="75" cy="55.5" r="3.2" fill="#ffffff"/>
+                        <circle cx="79" cy="60" r="1.4" fill="#ffffff"/>
+                    </g>
+                </g>
+
+                <!-- 2. Mắt cười híp (^ ^) -->
+                <g id="bearEyesHappy" class="bear-eye-group" style="display:none;">
+                    <path d="M 35 60 Q 43 49 51 60" fill="none" stroke="#2b140b" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M 69 60 Q 77 49 85 60" fill="none" stroke="#2b140b" stroke-width="4" stroke-linecap="round"/>
+                </g>
+
+                <!-- 3. Mắt mếu máo / khóc (Sad 🥺) -->
+                <g id="bearEyesSad" class="bear-eye-group" style="display:none;">
+                    <ellipse cx="43" cy="59" rx="7" ry="7.5" fill="#1b1224"/>
+                    <circle cx="41.5" cy="56.5" r="3.8" fill="#ffffff"/>
+                    <circle cx="45.5" cy="61.5" r="2" fill="#a5f3fc"/>
+                    <ellipse cx="77" cy="59" rx="7" ry="7.5" fill="#1b1224"/>
+                    <circle cx="75.5" cy="56.5" r="3.8" fill="#ffffff"/>
+                    <circle cx="79.5" cy="61.5" r="2" fill="#a5f3fc"/>
+                    <path d="M 36 52 Q 43 50 48 54" fill="none" stroke="#6b3a1a" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M 84 52 Q 77 50 72 54" fill="none" stroke="#6b3a1a" stroke-width="2.5" stroke-linecap="round"/>
+                    <g class="bear-tears">
+                        <path d="M 36 67 C 33 71 31 77 34 80 C 37 83 40 80 38 75 Z" fill="url(#tearGrad)"/>
+                        <path d="M 84 67 C 81 71 79 77 82 80 C 85 83 88 80 86 75 Z" fill="url(#tearGrad)"/>
+                    </g>
+                </g>
+
+                <!-- 4. Mắt trái tim đập thình thịch (😍) -->
+                <g id="bearEyesHeart" class="bear-eye-group" style="display:none;">
+                    <g class="heart-pulse-eye">
+                        <path d="M 43 54 A 3.6 3.6 0 0 0 37 59 Q 43 67 43 67 Q 43 67 49 59 A 3.6 3.6 0 0 0 43 54 Z" fill="#ff1744"/>
+                        <circle cx="41" cy="57" r="1.2" fill="#fff"/>
+                        <path d="M 77 54 A 3.6 3.6 0 0 0 71 59 Q 77 67 77 67 Q 77 67 83 59 A 3.6 3.6 0 0 0 77 54 Z" fill="#ff1744"/>
+                        <circle cx="75" cy="57" r="1.2" fill="#fff"/>
+                    </g>
+                </g>
+
+                <!-- 5. Mắt nháy tinh nghịch (^ ~) -->
+                <g id="bearEyesWink" class="bear-eye-group" style="display:none;">
+                    <path d="M 35 60 Q 43 50 51 60" fill="none" stroke="#2b140b" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="77" cy="58" r="7.5" fill="#211019"/>
+                    <circle cx="75" cy="55.5" r="3.2" fill="#ffffff"/>
+                    <polygon points="79,53 80,55 82,55 80.5,56.5 81,58.5 79,57 77,58.5 77.5,56.5 76,55 78,55" fill="#ffd700"/>
+                </g>
+
+                <!-- === CÁC BIỂU CẢM CỦA MIỆNG (MOUTH) === -->
+                <!-- 1. Miệng cười mỉm đáng yêu (w) -->
+                <g id="bearMouthSmile" class="bear-mouth-group">
+                    <path d="M 52 77 Q 56 82 60 77 Q 64 82 68 77" fill="none" stroke="#381b0f" stroke-width="2.6" stroke-linecap="round"/>
+                </g>
+
+                <!-- 2. Miệng cười toe toét thấy lưỡi -->
+                <g id="bearMouthLaugh" class="bear-mouth-group" style="display:none;">
+                    <path d="M 52 76 Q 60 88 68 76 Z" fill="#9c2738" stroke="#381b0f" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M 55 81 Q 60 78 65 81 Q 60 87 55 81 Z" fill="#ff6b8b"/>
+                </g>
+
+                <!-- 3. Miệng mếu xệ trề môi (🥺) -->
+                <g id="bearMouthPout" class="bear-mouth-group" style="display:none;">
+                    <path d="M 52 83 Q 60 77 68 83" fill="none" stroke="#381b0f" stroke-width="3" stroke-linecap="round"/>
+                    <ellipse cx="60" cy="84.5" rx="3.5" ry="1.2" fill="#ff8aa2"/>
+                </g>
+
+                <!-- 4. Miệng chúm chím hát nghêu ngao (O) -->
+                <g id="bearMouthSing" class="bear-mouth-group" style="display:none;">
+                    <g class="sing-bounce">
+                        <ellipse cx="60" cy="80" rx="4.5" ry="6" fill="#381b0f"/>
+                        <ellipse cx="60" cy="81" rx="3" ry="3.5" fill="#ff6b8b"/>
+                    </g>
+                </g>
+            </svg>
             <span id="bearVolBadge" class="bear-bubble-badge">80%</span>
         </div>
 
@@ -1624,6 +1896,153 @@
         }
         let lastNonZeroVolume = 80;
         let bearVolTimeout = null;
+        let bearSpeechTimeout = null;
+        let bearIdleInterval = null;
+        let currentBearMood = 'idle';
+
+        // Điều khiển biểu cảm của Bé Gấu
+        function setBearMood(mood, speechText = null, durationMs = null) {
+            currentBearMood = mood;
+            const eyeGroups = {
+                normal: document.getElementById('bearEyesNormal'),
+                happy: document.getElementById('bearEyesHappy'),
+                sad: document.getElementById('bearEyesSad'),
+                heart: document.getElementById('bearEyesHeart'),
+                wink: document.getElementById('bearEyesWink')
+            };
+            const mouthGroups = {
+                smile: document.getElementById('bearMouthSmile'),
+                laugh: document.getElementById('bearMouthLaugh'),
+                pout: document.getElementById('bearMouthPout'),
+                sing: document.getElementById('bearMouthSing')
+            };
+
+            // Ẩn tất cả mắt và miệng
+            Object.values(eyeGroups).forEach(el => { if (el) el.style.display = 'none'; });
+            Object.values(mouthGroups).forEach(el => { if (el) el.style.display = 'none'; });
+
+            // Kích hoạt theo mood
+            switch(mood) {
+                case 'happy':
+                    if (eyeGroups.happy) eyeGroups.happy.style.display = '';
+                    if (mouthGroups.laugh) mouthGroups.laugh.style.display = '';
+                    break;
+                case 'sad':
+                case 'pout':
+                    if (eyeGroups.sad) eyeGroups.sad.style.display = '';
+                    if (mouthGroups.pout) mouthGroups.pout.style.display = '';
+                    break;
+                case 'heart':
+                case 'love':
+                    if (eyeGroups.heart) eyeGroups.heart.style.display = '';
+                    if (mouthGroups.smile) mouthGroups.smile.style.display = '';
+                    break;
+                case 'wink':
+                    if (eyeGroups.wink) eyeGroups.wink.style.display = '';
+                    if (mouthGroups.smile) mouthGroups.smile.style.display = '';
+                    break;
+                case 'sing':
+                    if (eyeGroups.happy) eyeGroups.happy.style.display = '';
+                    if (mouthGroups.sing) mouthGroups.sing.style.display = '';
+                    break;
+                case 'idle':
+                default:
+                    if (eyeGroups.normal) eyeGroups.normal.style.display = '';
+                    if (mouthGroups.smile) mouthGroups.smile.style.display = '';
+                    break;
+            }
+
+            if (speechText) {
+                showBearSpeech(speechText);
+            }
+
+            if (durationMs) {
+                setTimeout(() => {
+                    const currentVol = parseInt(document.getElementById('bearVolSlider')?.value) || 80;
+                    updateBearMoodByVolume(currentVol);
+                }, durationMs);
+            }
+        }
+
+        // Hiện bong bóng lời thoại dễ thương trên đầu bé gấu
+        function showBearSpeech(text) {
+            const bubble = document.getElementById('bearSpeechBubble');
+            if (!bubble) return;
+            bubble.innerText = text;
+            bubble.classList.add('show');
+            clearTimeout(bearSpeechTimeout);
+            bearSpeechTimeout = setTimeout(() => {
+                bubble.classList.remove('show');
+            }, 3000);
+        }
+
+        // Tự động chọn biểu cảm theo mức âm lượng
+        function updateBearMoodByVolume(val) {
+            val = parseInt(val) || 0;
+            if (val === 0) {
+                setBearMood('sad', 'Huhu anh Coby tắt tiếng em rùi... 🥺');
+            } else if (val === 100) {
+                setBearMood('heart', 'Quẩy hết nấc luôn chị Hà An ơiii! 🔥💖');
+            } else if (val >= 60) {
+                setBearMood('happy', 'Nhạc nghe êm ái quá nè! 🎶');
+            } else {
+                setBearMood('idle');
+            }
+        }
+
+        // Hiệu ứng tim bay khi chạm vào bé gấu
+        function spawnBearHearts() {
+            const btn = document.getElementById('bearBubbleBtn');
+            if (!btn) return;
+            const icons = ['💖', '💕', '✨', '🌸', '🧸'];
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const h = document.createElement('div');
+                    h.className = 'bear-pop-heart';
+                    h.innerText = icons[Math.floor(Math.random() * icons.length)];
+                    const rx = (Math.random() - 0.5) * 36;
+                    h.style.left = `calc(50% + ${rx}px)`;
+                    btn.appendChild(h);
+                    setTimeout(() => h.remove(), 1200);
+                }, i * 140);
+            }
+        }
+
+        // Khi người dùng bấm/chạm vào bé gấu
+        function handleBearBubbleClick(e) {
+            toggleBearVolPanel(e);
+            spawnBearHearts();
+
+            const reactions = [
+                { mood: 'wink', text: 'Bé gấu chào anh Coby & Hà An 💖' },
+                { mood: 'happy', text: 'Chị Hà An xinh đẹp nhất trần đời! 🌸' },
+                { mood: 'heart', text: 'LoveBot yêu cả 2 anh chị lắm! 💕' },
+                { mood: 'sing', text: 'Hôm nay mình nghe bài gì nào? 🎵' }
+            ];
+            const pick = reactions[Math.floor(Math.random() * reactions.length)];
+            setBearMood(pick.mood, pick.text, 2500);
+        }
+
+        // Chu kỳ biểu cảm tự nhiên khi để yên (Idle autonomous behavior)
+        function initBearAutonomousMoods() {
+            if (bearIdleInterval) clearInterval(bearIdleInterval);
+            bearIdleInterval = setInterval(() => {
+                const panel = document.getElementById('bearVolPanel');
+                if (panel && panel.classList.contains('show')) return;
+
+                const currentVol = parseInt(document.getElementById('bearVolSlider')?.value) || 80;
+                if (currentVol === 0) return; // Nếu đang mute thì giữ nguyên biểu cảm mếu máo
+
+                const rand = Math.random();
+                if (rand < 0.35) {
+                    setBearMood('wink', null, 1600);
+                } else if (rand < 0.70) {
+                    setBearMood('happy', null, 2000);
+                } else if (rand < 0.90) {
+                    setBearMood('sing', null, 2200);
+                }
+            }, 6500);
+        }
 
         function updateVolumeUI(val) {
             val = Math.max(0, Math.min(100, parseInt(val) || 0));
@@ -1642,6 +2061,9 @@
                 else if (val < 40) muteBtn.innerText = '🔉';
                 else muteBtn.innerText = '🔊';
             }
+
+            // Đồng bộ biểu cảm bé gấu
+            updateBearMoodByVolume(val);
 
             // Đồng bộ thanh trượt trong trang cài đặt (nếu có)
             const v1 = document.getElementById('volumeSlider');
@@ -1717,8 +2139,9 @@
             }
         });
 
-        // Khởi tạo mức âm lượng mặc định 80%
+        // Khởi tạo mức âm lượng mặc định 80% & vòng lặp biểu cảm sống động
         updateVolumeUI(80);
+        initBearAutonomousMoods();
 
         // ================= Quản lý Sổ tay tình yêu (LocalStorage) =================
         let chatHistory = JSON.parse(localStorage.getItem('lovebot_history') || "[]");
