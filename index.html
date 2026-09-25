@@ -1,0 +1,2214 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LoveBot Companion 💖 Hà An & anh Coby</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+        :root {
+            --bg: #0b0d19;
+            --card-bg: rgba(22, 26, 46, 0.75);
+            --card-border: rgba(255, 255, 255, 0.09);
+            --primary: #ff3b81;
+            --primary-glow: rgba(255, 59, 129, 0.4);
+            --accent: #a855f7;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --success: #10b981;
+            --gold: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body {
+            background: radial-gradient(circle at 50% 5%, #2a1645 0%, #0b0d19 80%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 16px 12px 60px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+        .container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 16px; }
+
+        /* Floating Hearts Particles */
+        .hearts-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .heart-particle {
+            position: absolute;
+            color: rgba(255, 59, 129, 0.18);
+            font-size: 18px;
+            animation: floatUp 12s linear infinite;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(105vh) scale(0.6) rotate(0deg); opacity: 0; }
+            20% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { transform: translateY(-10vh) scale(1.2) rotate(360deg); opacity: 0; }
+        }
+
+        /* Navigation Bar */
+        .nav-bar {
+            display: flex;
+            gap: 6px;
+            background: rgba(18, 22, 38, 0.8);
+            padding: 5px;
+            border-radius: 30px;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 10px;
+            z-index: 90;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .nav-bar::-webkit-scrollbar { display: none; }
+        .nav-item {
+            flex: 1;
+            min-width: 75px;
+            text-align: center;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 20px;
+            cursor: pointer;
+            color: var(--text-dim);
+            transition: all 0.25s;
+            white-space: nowrap;
+        }
+        .nav-item.active {
+            background: linear-gradient(135deg, #ff3b81, #9333ea);
+            color: #fff;
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
+
+        /* Header */
+        .header { text-align: center; padding: 6px 0; z-index: 1; }
+        .header h1 {
+            font-size: 25px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff4382, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .header p { font-size: 13px; color: var(--text-dim); margin-top: 3px; }
+
+        /* Card Container */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 22px;
+            padding: 16px;
+            backdrop-filter: blur(14px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+            z-index: 1;
+            position: relative;
+        }
+
+        /* Love Counter Banner */
+        .love-counter {
+            background: linear-gradient(135deg, rgba(255, 59, 129, 0.15), rgba(168, 85, 247, 0.15));
+            border: 1px solid rgba(255, 59, 129, 0.25);
+            border-radius: 22px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 8px;
+        }
+        .counter-title { font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #ff759f; text-transform: uppercase; }
+        .counter-grid {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+        }
+        .time-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .time-num {
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 15px rgba(255, 59, 129, 0.6);
+            font-family: 'Playfair Display', serif;
+        }
+        .time-lbl { font-size: 10px; color: var(--text-dim); text-transform: uppercase; margin-top: -2px; }
+        .counter-quote { font-size: 12px; font-style: italic; color: #cbd5e1; }
+
+        /* Face Screen */
+        .face-box {
+            background: #000;
+            border-radius: 16px;
+            height: 105px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            position: relative;
+            overflow: hidden;
+        }
+        canvas { border-radius: 12px; }
+
+        /* Status bar */
+        .status-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+        }
+        .status-badge .dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #64748b;
+        }
+        .status-badge.online .dot { background: var(--success); box-shadow: 0 0 10px var(--success); }
+        .status-badge.speaking .dot { background: var(--primary); box-shadow: 0 0 10px var(--primary); }
+        .status-badge.listening .dot { background: #38bdf8; box-shadow: 0 0 10px #38bdf8; }
+
+        /* Buttons */
+        .btn {
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 12px 16px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            color: #fff;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #ff3b81, #d946ef);
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
+        .btn-primary:active { transform: scale(0.97); }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--card-border);
+        }
+        .btn-secondary:active { transform: scale(0.97); }
+
+        /* Volume Slider */
+        .slider-box { display: flex; flex-direction: column; gap: 6px; }
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary);
+            height: 8px;
+            background: #1e2238;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Speak & Ask Section */
+        .speak-box { display: flex; flex-direction: column; gap: 10px; }
+        .input-group { display: flex; gap: 8px; }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 14px;
+            background: rgba(12, 14, 23, 0.8);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus { border-color: var(--primary); }
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .chip {
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-dim);
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
+        }
+        .chip:hover, .chip:active { background: var(--primary-glow); color: #fff; border-color: var(--primary); }
+
+        /* Chat History */
+        .chat-log { display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto; }
+        .bubble {
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        .bubble.user {
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            align-self: flex-start;
+            color: #e2e8f0;
+        }
+        .bubble.bot {
+            background: rgba(255, 59, 129, 0.15);
+            border: 1px solid rgba(255, 59, 129, 0.25);
+            align-self: flex-start;
+            color: #ff9bbb;
+        }
+        .bubble-label { font-size: 11px; font-weight: 700; margin-bottom: 2px; opacity: 0.8; }
+        .bubble-time { font-size: 10px; color: var(--text-dim); margin-top: 4px; text-align: right; }
+
+        /* Photo Album Gallery */
+        .album-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .photo-card {
+            background: #181d33;
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .photo-card img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .photo-cap {
+            font-size: 11px;
+            color: #cbd5e1;
+            text-align: center;
+            padding: 2px 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .del-btn {
+            position: absolute;
+            top: 10px; right: 10px;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            border: none;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Romantic Audio Player & Dual Modes */
+        .mode-toggle-group {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.25s;
+            color: #fff;
+            text-align: left;
+        }
+        .mode-btn.active.mode-bear {
+            background: linear-gradient(135deg, rgba(255, 59, 129, 0.22), rgba(217, 70, 239, 0.22));
+            border-color: #ff3b81;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+        .mode-btn.active.mode-device {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(168, 85, 247, 0.22));
+            border-color: #38bdf8;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
+        }
+        .mode-icon { font-size: 22px; flex-shrink: 0; }
+        .mode-text { display: flex; flex-direction: column; overflow: hidden; }
+        .mode-title { font-size: 13px; font-weight: 700; color: #fff; }
+        .mode-sub { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
+
+        .player-box {
+            background: rgba(147, 51, 234, 0.12);
+            border: 1px solid rgba(147, 51, 234, 0.25);
+            border-radius: 18px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+        }
+        .play-btn {
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff3b81, #9333ea);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 0 18px var(--primary-glow);
+            flex-shrink: 0;
+            transition: transform 0.2s;
+        }
+        .play-btn:active { transform: scale(0.92); }
+        .play-btn.playing {
+            animation: pulseGlow 1.5s infinite;
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 12px var(--primary-glow); }
+            50% { box-shadow: 0 0 24px rgba(255, 59, 129, 0.8); }
+            100% { box-shadow: 0 0 12px var(--primary-glow); }
+        }
+        @keyframes spinVinyl {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .track-info { flex: 1; overflow: hidden; }
+        .track-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+        .track-badge.bear {
+            background: rgba(255, 59, 129, 0.18);
+            color: #ff9bbb;
+            border: 1px solid rgba(255, 59, 129, 0.35);
+        }
+        .track-badge.device {
+            background: rgba(56, 189, 248, 0.18);
+            color: #7dd3fc;
+            border: 1px solid rgba(56, 189, 248, 0.35);
+        }
+        .track-title { font-size: 14px; font-weight: 700; color: #fff; }
+        .track-artist { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+        /* Soundwave Equalizer Bars */
+        .equalizer {
+            display: inline-flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 18px;
+        }
+        .equalizer .bar {
+            width: 3px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+            animation: eqBounce 0.8s ease-in-out infinite alternate;
+        }
+        .equalizer .bar:nth-child(1) { animation-delay: 0.0s; height: 35%; }
+        .equalizer .bar:nth-child(2) { animation-delay: 0.25s; height: 75%; }
+        .equalizer .bar:nth-child(3) { animation-delay: 0.5s; height: 100%; }
+        .equalizer .bar:nth-child(4) { animation-delay: 0.15s; height: 50%; }
+        .equalizer .bar:nth-child(5) { animation-delay: 0.35s; height: 85%; }
+        @keyframes eqBounce {
+            0% { height: 25%; }
+            100% { height: 100%; }
+        }
+
+        /* Seek & Progress Bar */
+        .seek-container {
+            margin-top: 14px;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+        }
+        .seek-time-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .seek-time {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dim);
+            font-variant-numeric: tabular-nums;
+            min-width: 42px;
+        }
+        .seek-time#musicCurrentTime {
+            color: #ff9bbb;
+        }
+        .seek-quick-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .seek-jump-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--card-border);
+            color: #f8fafc;
+            border-radius: 12px;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .seek-jump-btn:hover, .seek-jump-btn:active {
+            background: rgba(255, 59, 129, 0.25);
+            border-color: var(--primary);
+            color: #fff;
+            transform: scale(0.96);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+        .seek-slider-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .seek-slider-wrapper input[type="range"] {
+            width: 100%;
+            height: 7px;
+            accent-color: var(--primary);
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        /* Player Controls & Sleep Timer */
+        .player-controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 14px;
+        }
+        .ctrl-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--card-border);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .ctrl-btn:hover, .ctrl-btn:active {
+            background: rgba(255, 59, 129, 0.18);
+            border-color: var(--primary);
+            transform: scale(0.95);
+        }
+        .ctrl-btn.active {
+            background: rgba(255, 59, 129, 0.25);
+            border-color: var(--primary);
+            color: #ff9bbb;
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+        .sleep-timer-box {
+            margin-top: 12px;
+            padding: 12px 14px;
+            background: rgba(147, 51, 234, 0.12);
+            border: 1px solid rgba(147, 51, 234, 0.28);
+            border-radius: 14px;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .timer-chips {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .timer-chip {
+            flex: 1;
+            padding: 6px 0;
+            border-radius: 10px;
+            border: 1px solid var(--card-border);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-dim);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .timer-chip:hover {
+            border-color: var(--accent);
+            color: #fff;
+        }
+        .timer-chip.active {
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.45);
+        }
+        .playlist-tabs {
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .playlist-tabs::-webkit-scrollbar { display: none; }
+        .pl-tab {
+            padding: 4px 10px;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-dim);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .pl-tab:hover { border-color: rgba(255, 59, 129, 0.4); color: #fff; }
+        .pl-tab.active {
+            background: rgba(255, 59, 129, 0.2);
+            color: #ff9bbb;
+            border-color: var(--primary);
+        }
+
+        /* Playlist Items */
+        .playlist-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .playlist-item:hover, .playlist-item:active {
+            background: rgba(255, 59, 129, 0.08);
+            border-color: rgba(255, 59, 129, 0.3);
+        }
+        .playlist-item.active {
+            background: rgba(255, 59, 129, 0.14);
+            border-color: var(--primary);
+        }
+        .playlist-title { font-size: 13px; font-weight: 600; color: #fff; }
+        .playlist-desc { font-size: 11px; color: var(--text-dim); }
+
+        .mini-opt-btn {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid var(--card-border);
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mini-opt-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        /* Toast notification */
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(16, 185, 129, 0.95);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            z-index: 100;
+            pointer-events: none;
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+
+        .footer { text-align: center; font-size: 11px; color: #475569; padding: 12px 0; z-index: 1; }
+    </style>
+</head>
+<body>
+    <!-- Hearts background particles -->
+    <div class="hearts-bg" id="heartsBg"></div>
+
+    <div class="container">
+        <!-- Navigation Bar -->
+        <div class="nav-bar">
+            <div class="nav-item active" onclick="switchTab('tab-robot', this)">🤖 Robot</div>
+            <div class="nav-item" onclick="switchTab('tab-counter', this)">⏳ Kỷ Niệm</div>
+            <div class="nav-item" onclick="switchTab('tab-journal', this)">💌 Nhật Ký</div>
+            <div class="nav-item" onclick="switchTab('tab-album', this)">📸 Album</div>
+            <div class="nav-item" onclick="switchTab('tab-music', this)">🎵 Góc Nhạc</div>
+        </div>
+
+        <!-- Header -->
+        <div class="header">
+            <h1>💖 LoveBot Companion</h1>
+            <p id="subTitle">Dành riêng cho Hà An (Julia) & anh Coby</p>
+        </div>
+
+        <!-- TAB 1: ROBOT CONTROL (CHÍNH) -->
+        <div id="tab-robot" class="tab-content" style="display: flex; flex-direction: column; gap: 14px;">
+            <!-- Robot Status & Face -->
+            <div class="card">
+                <div class="status-header">
+                    <span style="font-size: 13px; font-weight: 600; color: var(--text-dim);">TRẠNG THÁI CLOUD</span>
+                    <div id="statusBadge" class="status-badge">
+                        <span class="dot"></span>
+                        <span id="statusText">Đang kết nối...</span>
+                    </div>
+                </div>
+
+                <!-- Face Preview Screen -->
+                <div class="face-box">
+                    <canvas id="faceCanvas" width="144" height="80"></canvas>
+                </div>
+
+                <!-- Voice Button & Quick Actions -->
+                <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 10px;">
+                    <button id="voiceBtn" class="btn btn-primary" onclick="toggleVoice()" style="font-size: 15px; padding: 14px 18px; font-weight: 700; width: 100%; border-radius: 16px;">
+                        🎙️ Chạm để nói chuyện với Bé
+                    </button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" onclick="sendTouch()" style="flex: 1; font-size: 13px;">
+                            💖 Nựng Bé
+                        </button>
+                        <button class="btn btn-secondary" onclick="sendChime()" style="flex: 1; font-size: 13px;">
+                            🔔 Thử chuông
+                        </button>
+                    </div>
+
+                    <!-- Nơi phát câu trả lời -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid var(--card-border); margin-top: 2px;">
+                        <span style="font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
+                            🔊 Nơi phát câu trả lời:
+                        </span>
+                        <div style="display: flex; gap: 4px;">
+                            <button type="button" id="btnVoiceBear" class="mini-opt-btn active" onclick="setVoiceOutput('bear')">🧸 Loa Gấu</button>
+                            <button type="button" id="btnVoiceDevice" class="mini-opt-btn" onclick="setVoiceOutput('device')">📱 Loa Máy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Volume Control Card -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <h3 style="font-size: 15px; display: flex; align-items: center; gap: 6px;">
+                        🔊 Âm lượng loa
+                    </h3>
+                    <span id="volumeValue" style="font-size: 14px; font-weight: 700; color: var(--primary);">80%</span>
+                </div>
+                <div class="slider-box">
+                    <input type="range" id="volumeSlider" min="0" max="100" value="80" oninput="changeVolume(this.value)">
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); margin-top: 4px;">
+                        <span>🔇 Tắt</span>
+                        <span>🔉 Vừa (50%)</span>
+                        <span>🔊 To (100%)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Speak & Ask Box -->
+            <div class="card">
+                <h3 style="font-size: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                    💬 Trò chuyện & Nói hộ từ xa
+                </h3>
+                <div class="speak-box">
+                    <div class="input-group">
+                        <input type="text" id="speakInput" placeholder="Nhập câu hỏi hoặc câu muốn robot nói..." onkeydown="if(event.key==='Enter') sendAsk()">
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-primary" style="flex: 1;" onclick="sendAsk()">
+                            🤖 Hỏi LoveBot
+                        </button>
+                        <button class="btn btn-secondary" style="flex: 1;" onclick="sendSpeak()">
+                            🔊 Đọc câu này
+                        </button>
+                    </div>
+                    <div class="chips">
+                        <span class="chip" onclick="quickAsk('Hôm nay là thứ mấy?')">📅 Hôm nay thứ mấy?</span>
+                        <span class="chip" onclick="quickAsk('Bây giờ là mấy giờ rồi?')">⏰ Mấy giờ rồi?</span>
+                        <span class="chip" onclick="quickAsk('Em có yêu anh Coby không?')">💖 Yêu anh Coby không?</span>
+                        <span class="chip" onclick="quickAsk('Khen công chúa một câu thật ngọt ngào đi!')">✨ Khen Công chúa</span>
+                        <span class="chip" onclick="quickSpeak('Anh Coby yêu Công chúa nhiều lắm! ❤️')">❤️ Anh Coby yêu Công chúa</span>
+                        <span class="chip" onclick="quickSpeak('Công chúa ăn cơm chưa nè? 🥰')">🍚 Công chúa ăn cơm chưa</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: ĐẾM NGÀY YÊU (LOVE COUNTER) -->
+        <div id="tab-counter" class="tab-content" style="display: none; flex-direction: column; gap: 14px;">
+            <div class="love-counter">
+                <span class="counter-title">✨ CHÚNG MÌNH ĐÃ BÊN NHAU ✨</span>
+                <div class="counter-grid">
+                    <div class="time-box">
+                        <span class="time-num" id="daysCount">0</span>
+                        <span class="time-lbl">Ngày</span>
+                    </div>
+                    <span style="font-size: 20px; color: var(--primary); font-weight: bold;">:</span>
+                    <div class="time-box">
+                        <span class="time-num" id="hoursCount">0</span>
+                        <span class="time-lbl">Giờ</span>
+                    </div>
+                    <span style="font-size: 20px; color: var(--primary); font-weight: bold;">:</span>
+                    <div class="time-box">
+                        <span class="time-num" id="minsCount">0</span>
+                        <span class="time-lbl">Phút</span>
+                    </div>
+                    <span style="font-size: 20px; color: var(--primary); font-weight: bold;">:</span>
+                    <div class="time-box">
+                        <span class="time-num" id="secsCount">0</span>
+                        <span class="time-lbl">Giây</span>
+                    </div>
+                </div>
+                <p class="counter-quote">"Mỗi ngày trôi qua, anh lại thấy yêu Hà An nhiều hơn ngày hôm qua ❤️"</p>
+                <button class="btn btn-secondary" onclick="editStartDate()" style="font-size: 11px; padding: 6px 14px; margin-top: 4px;">
+                    ⚙️ Chỉnh ngày bắt đầu yêu
+                </button>
+            </div>
+
+            <!-- Ghi chú đặc biệt của hai bạn -->
+            <div class="card">
+                <h3 style="font-size: 15px; margin-bottom: 12px; color: #ff9bbb;">🎀 Những điều Bé luôn ghi nhớ:</h3>
+                <div style="font-size: 13px; line-height: 1.8; color: #cbd5e1;">
+                    <p>👸 <b>Công chúa của anh:</b> Hà An (Julia)</p>
+                    <p>🤴 <b>Chàng trai của em:</b> anh Coby</p>
+                    <p>💖 <b>Nhiệm vụ của Bé:</b> Luôn dỗ dành, khen ngợi và truyền tải tình yêu của anh Coby đến Hà An mỗi ngày!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: SỔ TAY NHẬT KÝ TÌNH YÊU (LOCALSTORAGE) -->
+        <div id="tab-journal" class="tab-content" style="display: none; flex-direction: column; gap: 14px;">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="font-size: 15px; display: flex; align-items: center; gap: 6px;">
+                        📜 Sổ tay trò chuyện tình yêu
+                    </h3>
+                    <button class="btn btn-secondary" onclick="clearHistory()" style="font-size: 11px; padding: 4px 10px;">
+                        🗑️ Xóa lịch sử
+                    </button>
+                </div>
+                <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 10px;">
+                    Mọi câu hỏi và câu nói yêu thương đều được tự động lưu vĩnh viễn trên điện thoại của bạn gái.
+                </p>
+                <div class="chat-log" id="historyLog">
+                    <!-- Sẽ render tự động từ LocalStorage -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: ALBUM ẢNH KỶ NIỆM (SAVED IN BROWSER) -->
+        <div id="tab-album" class="tab-content" style="display: none; flex-direction: column; gap: 14px;">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="font-size: 15px; display: flex; align-items: center; gap: 6px;">
+                        📸 Kho ảnh kỷ niệm của chúng mình
+                    </h3>
+                    <label class="btn btn-primary" style="font-size: 12px; padding: 6px 12px; cursor: pointer;">
+                        ➕ Thêm ảnh
+                        <input type="file" accept="image/*" onchange="uploadPhoto(this)" style="display: none;">
+                    </label>
+                </div>
+                <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 8px;">
+                    Bạn gái có thể thêm ảnh đẹp của hai người vào đây, ảnh sẽ được lưu trữ an toàn ngay trên điện thoại!
+                </p>
+                <div class="album-grid" id="albumGrid">
+                    <!-- Ảnh sẽ hiển thị ở đây -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: GÓC NHẠC CHILL (ROMANTIC PLAYER) -->
+        <div id="tab-music" class="tab-content" style="display: none; flex-direction: column; gap: 14px;">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 style="font-size: 15px; display: flex; align-items: center; gap: 6px;">
+                        🎵 Giai điệu tình yêu cho Hà An
+                    </h3>
+                    <div id="musicEqualizer" class="equalizer" style="display: none;">
+                        <span class="bar"></span>
+                        <span class="bar"></span>
+                        <span class="bar"></span>
+                        <span class="bar"></span>
+                        <span class="bar"></span>
+                    </div>
+                </div>
+
+                <!-- 2 Chế độ phát âm thanh: Loa Gấu & YouTube -->
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">
+                        📻 CHỌN NƠI PHÁT ÂM THANH
+                    </div>
+                    <div class="mode-toggle-group">
+                        <button type="button" class="mode-btn active mode-bear" id="btnModeBear" onclick="setMusicMode('bear')">
+                            <span class="mode-icon">🧸</span>
+                            <div class="mode-text">
+                                <span class="mode-title">Loa Gấu Bông</span>
+                                <span class="mode-sub">Phát qua loa trong bụng Gấu</span>
+                            </div>
+                        </button>
+                        <button type="button" class="mode-btn mode-device" id="btnModeDevice" onclick="setMusicMode('youtube')">
+                            <span class="mode-icon">▶️</span>
+                            <div class="mode-text">
+                                <span class="mode-title">YouTube Music</span>
+                                <span class="mode-sub">Hàng triệu bài hát & Lofi</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KHUNG PHÁT CHO LOA GẤU BÔNG -->
+                <div id="bearPlayerSection">
+                    <!-- Khung trình phát nhạc chính -->
+                    <div class="player-box">
+                        <div style="font-size: 32px; flex-shrink: 0;" id="playerVinylIcon">💿</div>
+                        <div class="track-info">
+                            <div class="track-badge bear" id="trackModeBadge">🧸 PHÁT QUA LOA GẤU</div>
+                            <div class="track-title" id="musicTitle">Acoustic Love Song 💖</div>
+                            <div class="track-artist" id="musicArtist">Dành tặng Công chúa của anh Coby</div>
+                        </div>
+                    </div>
+
+                    <!-- Thanh Tua Nhạc & Tiến Trình Thời Gian (Seek Bar) -->
+                    <div class="seek-container">
+                        <div class="seek-time-row">
+                            <span class="seek-time" id="musicCurrentTime">00:00</span>
+                            <div class="seek-quick-actions">
+                                <button type="button" class="seek-jump-btn" onclick="seekRelative(-10)" title="Lùi lại 10 giây">⏪ -10s</button>
+                                <button type="button" class="seek-jump-btn" onclick="seekRelative(10)" title="Tua tới 10 giây">+10s ⏩</button>
+                            </div>
+                            <span class="seek-time" id="musicTotalTime">--:--</span>
+                        </div>
+                        <div class="seek-slider-wrapper">
+                            <input type="range" min="0" max="100" value="0" step="0.1" id="musicProgressBar" 
+                                   oninput="onSeekInput(this.value)" onchange="onSeekChange(this.value)">
+                        </div>
+                    </div>
+
+                    <!-- Hàng nút điều khiển bài hát -->
+                    <div class="player-controls-row">
+                        <button type="button" class="ctrl-btn" id="btnPlayMode" onclick="cyclePlayMode()" title="Chế độ lặp">🔁</button>
+                        <button type="button" class="ctrl-btn" onclick="prevTrack()" title="Bài trước">⏮️</button>
+                        <button type="button" class="play-btn" id="playBtn" onclick="togglePlayMusic()">▶</button>
+                        <button type="button" class="ctrl-btn" onclick="nextTrack()" title="Bài tiếp">⏭️</button>
+                        <button type="button" class="ctrl-btn" id="btnSleepToggle" onclick="toggleSleepTimerBox()" title="Hẹn giờ tắt ngủ">💤</button>
+                    </div>
+
+                    <!-- Khung Hẹn Giờ Tắt Nhạc (Sleep Timer) -->
+                    <div id="sleepTimerBox" class="sleep-timer-box" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 12px; font-weight: 700; color: #c084fc; display: flex; align-items: center; gap: 4px;">
+                                💤 Hẹn giờ tắt nhạc ru ngủ:
+                            </span>
+                            <span id="sleepTimerCountdown" style="font-size: 11px; font-weight: 700; color: var(--gold);">Đang tắt</span>
+                        </div>
+                        <div class="timer-chips">
+                            <button type="button" class="timer-chip active" id="chipTimer0" onclick="setSleepTimer(0)">Tắt</button>
+                            <button type="button" class="timer-chip" id="chipTimer15" onclick="setSleepTimer(15)">15p</button>
+                            <button type="button" class="timer-chip" id="chipTimer30" onclick="setSleepTimer(30)">30p</button>
+                            <button type="button" class="timer-chip" id="chipTimer45" onclick="setSleepTimer(45)">45p</button>
+                            <button type="button" class="timer-chip" id="chipTimer60" onclick="setSleepTimer(60)">60p</button>
+                        </div>
+                        <div style="font-size: 10px; color: var(--text-dim); margin-top: 6px; line-height: 1.4;">
+                            💡 Âm lượng sẽ tự động giảm dần (Fade-out) trong 1 phút cuối để Công chúa ngủ say không bị giật mình.
+                        </div>
+                    </div>
+
+                    <!-- Thanh âm lượng loa Gấu tiện lợi -->
+                    <div id="musicVolBox" style="margin-top: 12px; padding: 10px 14px; background: rgba(0,0,0,0.25); border-radius: 14px; border: 1px solid var(--card-border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
+                                🔊 Âm lượng loa Gấu bông:
+                            </span>
+                            <span id="musicVolVal" style="font-size: 12px; font-weight: 700; color: var(--primary);">80%</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="80" id="musicVolumeSlider" oninput="changeVolume(this.value)">
+                    </div>
+
+                    <!-- Bộ lọc Mood & Thêm bài hát -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; margin-bottom: 8px;">
+                        <div class="playlist-tabs">
+                            <button type="button" class="pl-tab active" onclick="filterMood('all', this)">Tất cả</button>
+                            <button type="button" class="pl-tab" onclick="filterMood('love', this)">💖 Tình ca</button>
+                            <button type="button" class="pl-tab" onclick="filterMood('chill', this)">💕 Lofi</button>
+                            <button type="button" class="pl-tab" onclick="filterMood('sleep', this)">🌧️ Ru ngủ</button>
+                            <button type="button" class="pl-tab" onclick="filterMood('custom', this)">⭐ Tự thêm</button>
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="addCustomTrackPrompt()" style="font-size: 11px; padding: 4px 8px; border-radius: 10px; white-space: nowrap; margin-left: 6px;">
+                            ➕ Thêm
+                        </button>
+                    </div>
+
+                    <!-- Danh sách bài hát (Playlist) -->
+                    <div class="playlist-list" id="playlistContainer">
+                        <!-- Render từ JS -->
+                    </div>
+                </div>
+
+                <!-- KHUNG PHÁT YOUTUBE MUSIC TRỰC TIẾP -->
+                <div id="youtubePlayerBox" style="display: none; flex-direction: column; gap: 12px;">
+                    <!-- Nhập link / tìm kiếm YouTube -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 12px;">
+                        <div style="font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                            <span>▶️ Dán Link hoặc Mã bài hát YouTube</span>
+                        </div>
+                        <div style="display: flex; gap: 6px;">
+                            <input type="text" id="ytUrlInput" placeholder="Dán link (youtu.be/... hoặc youtube.com/...)" style="flex: 1; padding: 10px 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 10px; color: #fff; font-size: 13px;" onkeydown="if(event.key==='Enter') playCustomYouTube()">
+                            <button type="button" class="btn btn-primary" onclick="playCustomYouTube()" style="font-size: 13px; padding: 0 16px; border-radius: 10px; white-space: nowrap;">Phát</button>
+                        </div>
+                    </div>
+
+                    <!-- Màn hình YouTube Video / Audio -->
+                    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 16px; border: 1px solid var(--card-border); background: #000; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
+                        <iframe id="youtubeIframe" src="https://www.youtube-nocookie.com/embed/FN7ALfpGxiI?enablejsapi=1&autoplay=0" title="YouTube Music Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="position: absolute; top:0; left: 0; width: 100%; height: 100%; border: none;"></iframe>
+                    </div>
+
+                    <!-- Gợi ý bài hát tình ca & lofi hot trên YouTube -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 12px;">
+                        <div style="font-size: 12px; font-weight: 700; color: var(--text-dim); margin-bottom: 8px; text-transform: uppercase;">
+                            ✨ GỢI Ý BÀI HÁT TÌNH YÊU & LOFI HOT
+                        </div>
+                        <div id="ytSuggestionsList" style="display: flex; flex-direction: column; gap: 6px;">
+                            <!-- Render bằng JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <audio id="bgAudio" loop preload="none">
+                    <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-moment-113264.mp3" type="audio/mp3">
+                </audio>
+
+                <p style="font-size: 12px; color: var(--text-dim); margin-top: 12px; line-height: 1.5;" id="musicTipText">
+                    💡 <b>Chế độ Gấu:</b> Nhạc sẽ truyền thẳng qua WiFi/4G phát ra chiếc loa nhỏ trong bụng Gấu bông để bạn gái ôm ngủ siêu ấm áp!
+                </p>
+            </div>
+        </div>
+
+        <div class="footer">
+            LoveBot Cloud v2.0 • Standalone ESP32-S3 • Dành riêng cho Hà An & anh Coby 💖
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast">Đã gửi thành công! 💖</div>
+
+    <script>
+        const TOPIC_CMD = "lovebot_coby88_99/cmd";
+        const TOPIC_STATUS = "lovebot_coby88_99/status";
+        const WSS_BROKER = "wss://broker.emqx.io:8084/mqtt";
+
+        let currentStatus = "IDLE";
+        let isRecording = false;
+        let isVolumeDragging = false;
+        let volumeDebounce = null;
+        let blinkPhase = 0;
+        let lastBlink = Date.now();
+        const canvas = document.getElementById('faceCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Tạo hiệu ứng trái tim bay lãng mạn
+        function initHearts() {
+            const bg = document.getElementById('heartsBg');
+            const symbols = ['💖', '💕', '🌸', '✨', '❤️'];
+            for (let i = 0; i < 15; i++) {
+                const h = document.createElement('div');
+                h.className = 'heart-particle';
+                h.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+                h.style.left = Math.random() * 100 + 'vw';
+                h.style.animationDelay = (Math.random() * 10) + 's';
+                h.style.animationDuration = (8 + Math.random() * 8) + 's';
+                bg.appendChild(h);
+            }
+        }
+        initHearts();
+
+        // Chuyển Tab
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            const activeTab = document.getElementById(tabId);
+            if (activeTab) {
+                activeTab.style.display = (tabId === 'tab-counter' || tabId === 'tab-journal' || tabId === 'tab-album' || tabId === 'tab-music') ? 'flex' : 'flex';
+            }
+            if (el) el.classList.add('active');
+            if (tabId === 'tab-journal') renderHistory();
+            if (tabId === 'tab-album') renderAlbum();
+        }
+
+        // Đếm ngày yêu (Love Counter)
+        let startDateStr = localStorage.getItem('lovebot_start_date') || "2024-01-01T00:00:00";
+        function updateCounter() {
+            const start = new Date(startDateStr).getTime();
+            const now = Date.now();
+            const diff = Math.max(0, now - start);
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const mins = Math.floor((diff / 1000 / 60) % 60);
+            const secs = Math.floor((diff / 1000) % 60);
+
+            document.getElementById('daysCount').innerText = days;
+            document.getElementById('hoursCount').innerText = hours;
+            document.getElementById('minsCount').innerText = mins;
+            document.getElementById('secsCount').innerText = secs;
+        }
+        setInterval(updateCounter, 1000);
+        updateCounter();
+
+        function editStartDate() {
+            const input = prompt("Nhập ngày bắt đầu yêu (định dạng YYYY-MM-DD):", startDateStr.split('T')[0]);
+            if (input) {
+                startDateStr = input + "T00:00:00";
+                localStorage.setItem('lovebot_start_date', startDateStr);
+                updateCounter();
+                showToast("💖 Đã cập nhật ngày kỷ niệm!");
+            }
+        }
+
+        // Toast thông báo
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.className = 'show';
+            setTimeout(() => { t.className = ''; }, 2500);
+        }
+
+        // Vẽ khuôn mặt Robot OLED 72x40 (phóng to x2 trên Canvas 144x80)
+        function drawFace() {
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, 144, 80);
+            ctx.fillStyle = "#fff";
+
+            const now = Date.now();
+            if (now - lastBlink > 3200) {
+                blinkPhase = (now - lastBlink > 3350) ? 0 : 1;
+                if (blinkPhase === 0) lastBlink = now;
+            }
+
+            if (currentStatus === "LISTENING") {
+                ctx.beginPath();
+                ctx.roundRect(26, 16, 28, 36, 8);
+                ctx.roundRect(90, 16, 28, 36, 8);
+                ctx.fill();
+                let h = (Math.floor(now / 150) % 3) * 6;
+                ctx.fillRect(70, 34 - h, 4, 12 + h * 2);
+            } else if (currentStatus === "THINKING") {
+                ctx.beginPath();
+                let angle = (now / 200) % (Math.PI * 2);
+                ctx.arc(40, 36, 12, angle, angle + Math.PI);
+                ctx.arc(104, 36, 12, angle, angle + Math.PI);
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = "#fff";
+                ctx.stroke();
+            } else if (currentStatus === "SPEAKING") {
+                ctx.beginPath();
+                ctx.roundRect(26, 20, 28, 28, 8);
+                ctx.roundRect(90, 20, 28, 28, 8);
+                ctx.fill();
+                let mouth = 6 + (Math.sin(now / 100) + 1) * 6;
+                ctx.fillRect(62, 56, 20, mouth);
+            } else {
+                if (blinkPhase === 1) {
+                    ctx.fillRect(26, 38, 28, 4);
+                    ctx.fillRect(90, 38, 28, 4);
+                } else {
+                    ctx.beginPath();
+                    ctx.roundRect(26, 20, 28, 32, 8);
+                    ctx.roundRect(90, 20, 28, 32, 8);
+                    ctx.fill();
+                }
+            }
+            requestAnimationFrame(drawFace);
+        }
+        requestAnimationFrame(drawFace);
+
+        // Kết nối MQTT qua WebSocket bảo mật WSS
+        const client = mqtt.connect(WSS_BROKER, {
+            clientId: "WebUser_" + Math.random().toString(16).substring(2, 8),
+            keepalive: 60,
+            clean: true
+        });
+
+        client.on('connect', () => {
+            console.log("MQTT Connected!");
+            client.subscribe(TOPIC_STATUS);
+            document.getElementById('statusBadge').className = 'status-badge online';
+            document.getElementById('statusText').innerText = '🟢 Đã kết nối Cloud';
+            showToast("🌐 Đã kết nối Cloud thành công!");
+        });
+
+        client.on('message', (topic, message) => {
+            try {
+                const data = JSON.parse(message.toString());
+                if (data.online === false) {
+                    document.getElementById('statusBadge').className = 'status-badge';
+                    document.getElementById('statusText').innerText = '⚪ Bé đang ngoại tuyến';
+                    return;
+                }
+
+                currentStatus = data.status || "IDLE";
+                const badge = document.getElementById('statusBadge');
+                const text = document.getElementById('statusText');
+
+                if (currentStatus === 'LISTENING') {
+                    badge.className = 'status-badge listening';
+                    text.innerText = '🎙️ Đang nghe...';
+                } else if (currentStatus === 'THINKING') {
+                    badge.className = 'status-badge online';
+                    text.innerText = '🧠 Đang nghĩ...';
+                } else if (currentStatus === 'SPEAKING') {
+                    badge.className = 'status-badge speaking';
+                    text.innerText = '🔊 Đang nói...';
+                } else if (currentStatus === 'MUSIC' || data.musicPlaying) {
+                    badge.className = 'status-badge speaking';
+                    text.innerText = '🎵 Đang phát nhạc...';
+                } else {
+                    badge.className = 'status-badge online';
+                    text.innerText = '🟢 Bé sẵn sàng';
+                }
+
+                // Cập nhật trạng thái phát nhạc trên Gấu
+                if (data.musicPlaying !== undefined || currentStatus === 'MUSIC') {
+                    const bearActive = !!(data.musicPlaying || currentStatus === 'MUSIC');
+                    const songPlayDuration = Date.now() - trackPlayStartTime;
+
+                    if (isPlayingBear && !bearActive) {
+                        // Nếu vừa gửi lệnh play chưa đầy 6 giây, bỏ qua vì Gấu đang bắt tay kết nối & đệm nhạc
+                        if (songPlayDuration < 6000 && !manualMusicStop) {
+                            return;
+                        }
+
+                        // Vừa kết thúc bài hát trên gấu
+                        isPlayingBear = false;
+                        if (musicMode === 'bear') updatePlayerUI();
+                        renderPlaylist();
+                        
+                        // CHỈ tự động chuyển bài nếu bài hát thực sự đã phát được hơn 15 giây!
+                        if (musicMode === 'bear' && !manualMusicStop && songPlayDuration > 15000) {
+                            setTimeout(() => { nextTrack(true); }, 1500);
+                        }
+                    } else if (!isPlayingBear && bearActive) {
+                        isPlayingBear = true;
+                        if (musicMode === 'bear') updatePlayerUI();
+                        renderPlaylist();
+                    }
+                }
+
+                // Cập nhật tiến độ tua nhạc thời gian thực từ Gấu
+                if (data.musicSec !== undefined && data.musicTotalSec !== undefined) {
+                    if (musicMode === 'bear') {
+                        updateProgressUI(data.musicSec, data.musicTotalSec);
+                    }
+                }
+
+                // Lưu vào Sổ tay tình yêu (LocalStorage) & phát loa máy nếu chọn
+                if (data.lastUser && data.lastReply) {
+                    const isNew = saveToJournal(data.lastUser, data.lastReply);
+                    if (isNew && voiceOutputMode === 'device') {
+                        speakOnDevice(data.lastReply);
+                    }
+                }
+
+                if (data.volume !== undefined && !isVolumeDragging) {
+                    const v1 = document.getElementById('volumeSlider');
+                    const v2 = document.getElementById('musicVolumeSlider');
+                    const l1 = document.getElementById('volumeValue');
+                    const l2 = document.getElementById('musicVolVal');
+                    if (v1) v1.value = data.volume;
+                    if (v2) v2.value = data.volume;
+                    if (l1) l1.innerText = data.volume + '%';
+                    if (l2) l2.innerText = data.volume + '%';
+                }
+            } catch (e) {
+                console.error("MQTT Parse error", e);
+            }
+        });
+
+        client.on('offline', () => {
+            document.getElementById('statusBadge').className = 'status-badge';
+            document.getElementById('statusText').innerText = '⚠️ Mất kết nối Cloud';
+        });
+
+        function publishCmd(obj) {
+            if (client && client.connected) {
+                client.publish(TOPIC_CMD, JSON.stringify(obj));
+                return true;
+            } else {
+                showToast("⚠️ Đang kết nối lại Cloud...");
+                return false;
+            }
+        }
+
+        // 🎙️ Thu âm giọng nói trực tiếp qua Micro trình duyệt
+        function stopAllAudio() {
+            const audio = document.getElementById('bgAudio');
+            if (audio && !audio.paused) {
+                audio.pause();
+                isPlayingDevice = false;
+                updatePlayerUI();
+            }
+            if (isPlayingBear) {
+                isPlayingBear = false;
+                updatePlayerUI();
+            }
+            if (window.speechSynthesis && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+            }
+            publishCmd({ action: "stop" });
+        }
+
+        let recognition = null;
+        let silenceTimer = null;
+
+        function toggleVoice() {
+            // Ngắt ngay lập tức mọi âm thanh đang phát để vào trạng thái lắng nghe yên tĩnh tuyệt đối
+            stopAllAudio();
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                const input = document.getElementById('speakInput');
+                input.focus();
+                showToast("📱 Bấm nút Micro trên bàn phím để nói nhé!");
+                return;
+            }
+
+            if (isRecording) {
+                if (silenceTimer) clearTimeout(silenceTimer);
+                if (recognition) recognition.stop();
+                return;
+            }
+
+            try {
+                recognition = new SpeechRecognition();
+                recognition.lang = 'vi-VN';
+                recognition.continuous = true;
+                recognition.interimResults = true;
+
+                recognition.onstart = () => {
+                    isRecording = true;
+                    const btn = document.getElementById('voiceBtn');
+                    btn.innerHTML = '⏹️ Đang nghe... Bấm để GỬI';
+                    btn.style.background = 'linear-gradient(135deg, #ef4444, #f43f5e)';
+                    btn.style.boxShadow = '0 0 25px rgba(239, 68, 68, 0.6)';
+                    showToast("🎙️ Đang nghe... Bạn cứ thong thả nói nhé!");
+                    document.getElementById('speakInput').value = '';
+                };
+
+                recognition.onresult = (event) => {
+                    let fullText = '';
+                    for (let i = 0; i < event.results.length; i++) {
+                        fullText += event.results[i][0].transcript + ' ';
+                    }
+                    fullText = fullText.trim();
+                    if (fullText.length > 0) {
+                        document.getElementById('speakInput').value = fullText;
+                        if (silenceTimer) clearTimeout(silenceTimer);
+                        silenceTimer = setTimeout(() => {
+                            if (isRecording && recognition) {
+                                recognition.stop();
+                            }
+                        }, 2500);
+                    }
+                };
+
+                recognition.onerror = (event) => {
+                    console.log("Speech error", event);
+                    if (event.error !== 'no-speech') {
+                        showToast("⚠️ Chưa nghe rõ câu nói, bạn thử lại nhé!");
+                    }
+                };
+
+                recognition.onend = () => {
+                    if (silenceTimer) clearTimeout(silenceTimer);
+                    isRecording = false;
+                    const btn = document.getElementById('voiceBtn');
+                    btn.innerHTML = '🎙️ Chạm để nói chuyện với Bé';
+                    btn.style.background = 'linear-gradient(135deg, #ff3b81, #d946ef)';
+                    btn.style.boxShadow = '0 4px 15px var(--primary-glow)';
+
+                    const text = document.getElementById('speakInput').value.trim();
+                    if (text && text.length > 0) {
+                        showToast("🎯 Đã nhận: \"" + text + "\"");
+                        sendAsk();
+                    }
+                };
+
+                recognition.start();
+            } catch (err) {
+                console.error("Speech error", err);
+                const input = document.getElementById('speakInput');
+                input.focus();
+                showToast("📱 Bấm nút Micro trên bàn phím để nói nhé!");
+            }
+        }
+
+        function sendAsk() {
+            stopAllAudio();
+            const input = document.getElementById('speakInput');
+            const val = input.value.trim();
+            if (!val) return;
+            if (publishCmd({ action: "ask", text: val })) {
+                showToast("🚀 Đã gửi câu hỏi tới Bé!");
+                input.value = '';
+            }
+        }
+
+        function sendSpeak() {
+            stopAllAudio();
+            const input = document.getElementById('speakInput');
+            const val = input.value.trim();
+            if (!val) return;
+            if (publishCmd({ action: "speak", text: val })) {
+                showToast("🔊 Robot đang chuẩn bị đọc ra loa!");
+                input.value = '';
+            }
+        }
+
+        function sendTouch() {
+            if (publishCmd({ action: "touch" })) {
+                showToast("💖 Đang nựng Bé...");
+            }
+        }
+
+        function sendChime() {
+            if (publishCmd({ action: "chime" })) {
+                showToast("🔔 Đang phát chuông...");
+            }
+        }
+
+        function quickAsk(q) {
+            document.getElementById('speakInput').value = q;
+            sendAsk();
+        }
+
+        function quickSpeak(s) {
+            document.getElementById('speakInput').value = s;
+            sendSpeak();
+        }
+
+        function changeVolume(val) {
+            isVolumeDragging = true;
+            const v1 = document.getElementById('volumeSlider');
+            const v2 = document.getElementById('musicVolumeSlider');
+            const l1 = document.getElementById('volumeValue');
+            const l2 = document.getElementById('musicVolVal');
+            if (v1) v1.value = val;
+            if (v2) v2.value = val;
+            if (l1) l1.innerText = val + '%';
+            if (l2) l2.innerText = val + '%';
+
+            clearTimeout(volumeDebounce);
+            volumeDebounce = setTimeout(() => {
+                publishCmd({ action: "volume", value: parseInt(val) });
+                setTimeout(() => { isVolumeDragging = false; }, 800);
+            }, 100);
+        }
+
+        // ================= Quản lý Sổ tay tình yêu (LocalStorage) =================
+        let chatHistory = JSON.parse(localStorage.getItem('lovebot_history') || "[]");
+
+        function saveToJournal(userText, botText) {
+            if (chatHistory.length > 0 && chatHistory[0].user === userText && chatHistory[0].bot === botText) return false;
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' + now.toLocaleDateString('vi-VN');
+            chatHistory.unshift({ user: userText, bot: botText, time: timeStr });
+            if (chatHistory.length > 50) chatHistory.pop();
+            localStorage.setItem('lovebot_history', JSON.stringify(chatHistory));
+            return true;
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('historyLog');
+            if (!list) return;
+            list.innerHTML = '';
+            if (chatHistory.length === 0) {
+                list.innerHTML = '<p style="font-size: 13px; color: var(--text-dim); text-align: center; padding: 20px 0;">Chưa có tin nhắn nào được lưu 💖</p>';
+                return;
+            }
+            chatHistory.forEach(item => {
+                const u = document.createElement('div');
+                u.className = 'bubble user';
+                u.innerHTML = `<div class="bubble-label">👸 HÀ AN:</div><div>${escapeHtml(item.user)}</div><div class="bubble-time">${item.time}</div>`;
+                const b = document.createElement('div');
+                b.className = 'bubble bot';
+                b.innerHTML = `<div class="bubble-label">🤖 LOVE-BOT:</div><div>${escapeHtml(item.bot)}</div>`;
+                list.appendChild(u);
+                list.appendChild(b);
+            });
+        }
+
+        function clearHistory() {
+            if (confirm("Bạn có chắc muốn xóa lịch sử trò chuyện không?")) {
+                chatHistory = [];
+                localStorage.removeItem('lovebot_history');
+                renderHistory();
+                showToast("🗑️ Đã xóa lịch sử!");
+            }
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        // ================= Quản lý Kho ảnh kỷ niệm (LocalStorage) =================
+        let photos = JSON.parse(localStorage.getItem('lovebot_photos') || "[]");
+
+        function renderAlbum() {
+            const grid = document.getElementById('albumGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            if (photos.length === 0) {
+                grid.innerHTML = '<p style="grid-column: span 2; font-size: 13px; color: var(--text-dim); text-align: center; padding: 30px 0;">Chưa có ảnh nào. Bấm "+ Thêm ảnh" để lưu giữ khoảnh khắc đẹp nhé! 📸</p>';
+                return;
+            }
+            photos.forEach((p, idx) => {
+                const card = document.createElement('div');
+                card.className = 'photo-card';
+                card.innerHTML = `
+                    <button class="del-btn" onclick="deletePhoto(${idx})">&times;</button>
+                    <img src="${p.data}" alt="Photo">
+                    <div class="photo-cap">${escapeHtml(p.caption || "Kỷ niệm ngọt ngào")}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function uploadPhoto(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const caption = prompt("Nhập lời nhắn cho bức ảnh này:", "Kỷ niệm bên nhau ❤️") || "Kỷ niệm ngọt ngào";
+                photos.unshift({ data: e.target.result, caption: caption });
+                if (photos.length > 20) photos.pop();
+                try {
+                    localStorage.setItem('lovebot_photos', JSON.stringify(photos));
+                    renderAlbum();
+                    showToast("📸 Đã lưu ảnh vào album!");
+                } catch(err) {
+                    alert("Bộ nhớ ảnh tạm thời đầy, bạn hãy xóa bớt ảnh cũ trước nhé!");
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function deletePhoto(idx) {
+            if (confirm("Xóa bức ảnh này khỏi album?")) {
+                photos.splice(idx, 1);
+                localStorage.setItem('lovebot_photos', JSON.stringify(photos));
+                renderAlbum();
+                showToast("🗑️ Đã xóa ảnh!");
+            }
+        }
+
+        // ================= Trình phát nhạc Chill - 2 Chế độ (Gấu & Điện thoại) =================
+        // ================= Trình phát nhạc Chill & Lofi - 2 Chế độ (Gấu & Điện thoại) =================
+        const DEFAULT_PLAYLIST = [
+            // --- 💖 Tình Ca & Lãng Mạn ---
+            {
+                id: "coby_1",
+                category: "love",
+                title: "Acoustic Love Song 💖",
+                artist: "⚡ GitHub CDN Siêu Tốc (1s) • Tặng riêng Công chúa",
+                url: "https://raw.githubusercontent.com/namvu8092-beep/lovebot-cdn/main/romantic.mp3"
+            },
+            {
+                id: "coby_elise",
+                category: "love",
+                title: "Für Elise (Piano) 🎹",
+                artist: "⚡ GitHub CDN Siêu Tốc (1s) • Beethoven bất hủ",
+                url: "https://raw.githubusercontent.com/namvu8092-beep/lovebot-cdn/main/fur_elise.mp3"
+            },
+            {
+                id: "coby_serenity",
+                category: "love",
+                title: "Serenity Guitar 💕",
+                artist: "🎵 Guitar acoustic mộc mạc tình yêu",
+                url: "https://archive.org/download/Audionautix_Acoustic-9870/Jason_Shaw_-_SERENITY.mp3"
+            },
+            {
+                id: "coby_onefineday",
+                category: "love",
+                title: "One Fine Day ☀️",
+                artist: "🎵 Ngày nắng ấm bên em - Acoustic ngọt ngào",
+                url: "https://archive.org/download/Audionautix_Acoustic-9870/Jason_Shaw_-_ONE_FINE_DAY.mp3"
+            },
+
+            // --- 💕 Lofi Chill Thư Giãn ---
+            {
+                id: "coby_2",
+                category: "chill",
+                title: "Sweet Lofi Melody 💕",
+                artist: "⚡ GitHub CDN Siêu Tốc (1s) • Lofi ấm áp",
+                url: "https://raw.githubusercontent.com/namvu8092-beep/lovebot-cdn/main/sweet_lofi.mp3"
+            },
+            {
+                id: "coby_onion",
+                category: "chill",
+                title: "Onion Lofi Chill ☕",
+                artist: "🎵 Lukrembo - Cafe thư giãn nhẹ nhàng",
+                url: "https://archive.org/download/kalaido-hanging-lanterns_202101/Onion%20%28Prod.%20by%20Lukrembo%29.mp3"
+            },
+            {
+                id: "coby_firstsnow",
+                category: "chill",
+                title: "First Snow Lofi ❄️",
+                artist: "🎵 Kerusu - Tuyết đầu mùa dịu dàng",
+                url: "https://archive.org/download/kalaido-hanging-lanterns_202101/Kerusu%20-%20First%20Snow.mp3"
+            },
+            {
+                id: "coby_tranquillity",
+                category: "chill",
+                title: "Tranquillity Beat 🌸",
+                artist: "🎵 Chillhop thanh bình cho tâm hồn",
+                url: "https://archive.org/download/kalaido-hanging-lanterns_202101/Tranquillity%20-%20Chill%20Lofi%20Hip%20Hop%20Beat%20%28FREE%20FOR%20PROFIT%20USE%29.mp3"
+            },
+
+            // --- 🌧️ Ru Ngủ Êm Đềm ---
+            {
+                id: "coby_3",
+                category: "sleep",
+                title: "Gentle Rain & Calm 🌧️",
+                artist: "⚡ GitHub CDN Siêu Tốc (1s) • Mưa ru ngủ say",
+                url: "https://raw.githubusercontent.com/namvu8092-beep/lovebot-cdn/main/rain_calm.mp3"
+            },
+            {
+                id: "coby_rainlofi",
+                category: "sleep",
+                title: "Rain Lofi Sleep 🌙",
+                artist: "🎵 Tiếng mưa kết hợp lofi du dương ngủ ngon",
+                url: "https://archive.org/download/kalaido-hanging-lanterns_202101/%28FREE%29%20Lo-fi%20Type%20Beat%20-%20Rain.mp3"
+            },
+            {
+                id: "coby_lazyday",
+                category: "sleep",
+                title: "Lazy Day Acoustic 🛋️",
+                artist: "🎵 Bản acoustic thư giãn trước khi ngủ",
+                url: "https://archive.org/download/Audionautix_Acoustic-9870/Jason_Shaw_-_LAZY_DAY.mp3"
+            }
+        ];
+
+        let customTracks = JSON.parse(localStorage.getItem('lovebot_custom_tracks') || "[]");
+        let playlist = [...DEFAULT_PLAYLIST, ...customTracks];
+        let currentFilter = 'all';
+        let currentTrackIdx = 0;
+        let musicMode = localStorage.getItem('lovebot_music_mode') || 'bear'; // 'bear' hoặc 'device'
+        let isPlayingBear = false;
+        let isPlayingDevice = false;
+        let voiceOutputMode = localStorage.getItem('lovebot_voice_mode') || 'bear'; // 'bear' hoặc 'device'
+        let playMode = localStorage.getItem('lovebot_play_mode') || 'repeat-all'; // 'repeat-all', 'repeat-one', 'shuffle'
+        let manualMusicStop = false;
+        let trackPlayStartTime = 0;
+
+        // Quản lý Hẹn giờ tắt nhạc (Sleep Timer)
+        let sleepTimerMinutes = 0;
+        let sleepTimerEnd = 0;
+        let sleepTimerInterval = null;
+        let isSleepFadeActive = false;
+
+        // Quản lý Tua Nhạc & Tiến Trình Thời Gian (Seek Bar)
+        let isSeeking = false;
+        let currentTrackSec = 0;
+        let totalTrackSec = 0;
+        let seekDebounce = null;
+
+        function formatTime(seconds) {
+            if (!seconds || isNaN(seconds) || seconds < 0) return "00:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function updateProgressUI(curSec, totSec) {
+            if (isSeeking) return;
+            currentTrackSec = Math.floor(curSec) || 0;
+            if (totSec && totSec > 0) {
+                totalTrackSec = Math.floor(totSec);
+            }
+            
+            const curLabel = document.getElementById('musicCurrentTime');
+            const totLabel = document.getElementById('musicTotalTime');
+            const slider = document.getElementById('musicProgressBar');
+
+            if (curLabel) {
+                if (musicMode === 'bear' && isPlayingBear && currentTrackSec === 0) {
+                    curLabel.innerText = "⏳ Đang đệm RAM...";
+                } else {
+                    curLabel.innerText = formatTime(currentTrackSec);
+                }
+            }
+            if (totLabel) {
+                totLabel.innerText = totalTrackSec > 0 ? formatTime(totalTrackSec) : "--:--";
+            }
+            if (slider) {
+                if (totalTrackSec > 0) {
+                    slider.value = ((currentTrackSec / totalTrackSec) * 100).toFixed(1);
+                } else {
+                    slider.value = 0;
+                }
+            }
+        }
+
+        function onSeekInput(percentVal) {
+            isSeeking = true;
+            const p = parseFloat(percentVal) || 0;
+            const curLabel = document.getElementById('musicCurrentTime');
+            if (totalTrackSec > 0 && curLabel) {
+                const previewSec = (p / 100) * totalTrackSec;
+                curLabel.innerText = formatTime(previewSec);
+            }
+        }
+
+        function onSeekChange(percentVal) {
+            const p = Math.max(0, Math.min(99.5, parseFloat(percentVal) || 0));
+            if (musicMode === 'bear') {
+                publishCmd({ action: "music", state: "seek", percent: p });
+                if (totalTrackSec > 0) {
+                    currentTrackSec = Math.floor((p / 100) * totalTrackSec);
+                    showToast(`⏩ Tua đến ${formatTime(currentTrackSec)}`);
+                } else {
+                    showToast(`⏩ Đang tua đến ${p.toFixed(0)}%`);
+                }
+            } else {
+                const audio = document.getElementById('bgAudio');
+                if (audio && audio.duration) {
+                    audio.currentTime = (p / 100) * audio.duration;
+                    showToast(`⏩ Tua đến ${formatTime(audio.currentTime)}`);
+                }
+            }
+            clearTimeout(seekDebounce);
+            seekDebounce = setTimeout(() => {
+                isSeeking = false;
+            }, 800);
+        }
+
+        function seekRelative(deltaSec) {
+            if (musicMode === 'bear') {
+                if (!isPlayingBear) {
+                    showToast("⚠️ Hãy bật phát nhạc trước khi tua!");
+                    return;
+                }
+                let targetSec = Math.max(0, currentTrackSec + deltaSec);
+                if (totalTrackSec > 0) {
+                    targetSec = Math.min(totalTrackSec - 2, targetSec);
+                    let p = (targetSec / totalTrackSec) * 100;
+                    publishCmd({ action: "music", state: "seek", percent: p });
+                    currentTrackSec = targetSec;
+                    updateProgressUI(targetSec, totalTrackSec);
+                    showToast(deltaSec > 0 ? `⏩ +${deltaSec}s (${formatTime(targetSec)})` : `⏪ ${deltaSec}s (${formatTime(targetSec)})`);
+                } else {
+                    showToast("⏳ Đang tải bài hát, thử lại sau 2 giây...");
+                }
+            } else {
+                const audio = document.getElementById('bgAudio');
+                if (audio && audio.duration) {
+                    audio.currentTime = Math.max(0, Math.min(audio.duration, audio.currentTime + deltaSec));
+                    updateProgressUI(audio.currentTime, audio.duration);
+                    showToast(deltaSec > 0 ? `⏩ +${deltaSec}s` : `⏪ ${deltaSec}s`);
+                }
+            }
+        }
+
+        function initMusicSystem() {
+            setMusicMode(musicMode);
+            updatePlayModeBtn();
+            renderPlaylist();
+            setVoiceOutput(voiceOutputMode);
+
+            // Tự động chuyển bài & đồng bộ thanh tiến trình khi phát trên thiết bị
+            const bgAudio = document.getElementById('bgAudio');
+            if (bgAudio) {
+                bgAudio.onended = () => {
+                    nextTrack(true);
+                };
+                bgAudio.ontimeupdate = () => {
+                    if (musicMode !== 'bear' && !isSeeking) {
+                        updateProgressUI(bgAudio.currentTime, bgAudio.duration);
+                    }
+                };
+            }
+        }
+
+        function filterMood(mood, btn) {
+            currentFilter = mood;
+            document.querySelectorAll('.pl-tab').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            renderPlaylist();
+        }
+
+        function renderPlaylist() {
+            const container = document.getElementById('playlistContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const filtered = playlist.map((tr, originalIdx) => ({ ...tr, originalIdx })).filter(item => {
+                if (currentFilter === 'all') return true;
+                if (currentFilter === 'custom') return item.isCustom;
+                return item.category === currentFilter;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="font-size: 12px; color: var(--text-dim); text-align: center; padding: 20px 0;">Chưa có bài hát nào trong mục này 🎵</p>';
+                return;
+            }
+
+            filtered.forEach((tr) => {
+                const el = document.createElement('div');
+                const isSelected = (tr.originalIdx === currentTrackIdx);
+                const isCurrentPlaying = isSelected && (musicMode === 'bear' ? isPlayingBear : isPlayingDevice);
+                el.className = 'playlist-item' + (isSelected ? ' active' : '');
+                
+                el.innerHTML = `
+                    <div style="flex: 1; overflow: hidden; cursor: pointer;" onclick="selectTrack(${tr.originalIdx}, true)">
+                        <div class="playlist-title">${escapeHtml(tr.title)}</div>
+                        <div class="playlist-desc">${escapeHtml(tr.artist)}</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        ${tr.isCustom ? `<button onclick="deleteCustomTrack('${tr.id}', event)" style="background: none; border: none; color: #ef4444; font-size: 14px; cursor: pointer;" title="Xóa bài này">&times;</button>` : ''}
+                        <span style="font-size: 16px; cursor: pointer;" onclick="selectTrack(${tr.originalIdx}, true)">${isCurrentPlaying ? '🔊' : (isSelected ? '👉' : '🎵')}</span>
+                    </div>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        function cyclePlayMode() {
+            if (playMode === 'repeat-all') {
+                playMode = 'repeat-one';
+                showToast("🔂 Chế độ: Lặp lại 1 bài");
+            } else if (playMode === 'repeat-one') {
+                playMode = 'shuffle';
+                showToast("🔀 Chế độ: Phát ngẫu nhiên");
+            } else {
+                playMode = 'repeat-all';
+                showToast("🔁 Chế độ: Tự chuyển bài tiếp theo");
+            }
+            localStorage.setItem('lovebot_play_mode', playMode);
+            updatePlayModeBtn();
+        }
+
+        function updatePlayModeBtn() {
+            const btn = document.getElementById('btnPlayMode');
+            if (!btn) return;
+            if (playMode === 'repeat-all') {
+                btn.innerText = '🔁';
+                btn.title = 'Tự chuyển bài tiếp theo';
+            } else if (playMode === 'repeat-one') {
+                btn.innerText = '🔂';
+                btn.title = 'Lặp lại 1 bài';
+            } else if (playMode === 'shuffle') {
+                btn.innerText = '🔀';
+                btn.title = 'Phát ngẫu nhiên';
+            }
+        }
+
+        function nextTrack(auto = false) {
+            manualMusicStop = false;
+            if (playlist.length === 0) return;
+            let nextIdx = currentTrackIdx;
+            if (auto && playMode === 'repeat-one') {
+                nextIdx = currentTrackIdx;
+            } else if (playMode === 'shuffle' && playlist.length > 1) {
+                while (nextIdx === currentTrackIdx) {
+                    nextIdx = Math.floor(Math.random() * playlist.length);
+                }
+            } else {
+                nextIdx = (currentTrackIdx + 1) % playlist.length;
+            }
+            selectTrack(nextIdx, true);
+        }
+
+        function prevTrack() {
+            manualMusicStop = false;
+            if (playlist.length === 0) return;
+            let prevIdx = (currentTrackIdx - 1 + playlist.length) % playlist.length;
+            selectTrack(prevIdx, true);
+        }
+
+        function toggleSleepTimerBox() {
+            const b = document.getElementById('sleepTimerBox');
+            if (!b) return;
+            b.style.display = (b.style.display === 'none' ? 'block' : 'none');
+        }
+
+        function setSleepTimer(minutes) {
+            sleepTimerMinutes = minutes;
+            if (sleepTimerInterval) clearInterval(sleepTimerInterval);
+            isSleepFadeActive = false;
+
+            const chips = [0, 15, 30, 45, 60];
+            chips.forEach(c => {
+                const el = document.getElementById('chipTimer' + c);
+                if (el) el.className = 'timer-chip' + (c === minutes ? ' active' : '');
+            });
+
+            const countdownEl = document.getElementById('sleepTimerCountdown');
+
+            if (minutes === 0) {
+                if (countdownEl) countdownEl.innerText = 'Đang tắt';
+                showToast("⏹️ Đã tắt hẹn giờ nghe nhạc");
+                return;
+            }
+
+            sleepTimerEnd = Date.now() + minutes * 60 * 1000;
+            showToast(`💤 Đã hẹn giờ tắt sau ${minutes} phút!`);
+
+            sleepTimerInterval = setInterval(() => {
+                const now = Date.now();
+                const remainMs = sleepTimerEnd - now;
+
+                if (remainMs <= 0) {
+                    clearInterval(sleepTimerInterval);
+                    sleepTimerInterval = null;
+                    if (countdownEl) countdownEl.innerText = 'Đã tắt';
+                    chips.forEach(c => {
+                        const el = document.getElementById('chipTimer' + c);
+                        if (el) el.className = 'timer-chip' + (c === 0 ? ' active' : '');
+                    });
+
+                    // Tắt nhạc hoàn toàn
+                    if (musicMode === 'bear' && isPlayingBear) {
+                        publishCmd({ action: "music", state: "stop" });
+                        isPlayingBear = false;
+                    }
+                    const audio = document.getElementById('bgAudio');
+                    if (audio) {
+                        audio.pause();
+                        audio.volume = 1.0;
+                    }
+                    isPlayingDevice = false;
+                    updatePlayerUI();
+                    renderPlaylist();
+                    showToast("💤 Chúc Công chúa ngủ thật ngon nhé! 💖");
+                    return;
+                }
+
+                const remainSec = Math.floor(remainMs / 1000);
+                const m = Math.floor(remainSec / 60);
+                const s = remainSec % 60;
+                if (countdownEl) countdownEl.innerText = `⏳ Còn ${m}:${s < 10 ? '0' : ''}${s}`;
+
+                // Cơ chế Fade-out trong 60 giây cuối cùng
+                if (remainSec <= 60) {
+                    isSleepFadeActive = true;
+                    const fadePercent = Math.max(0.05, remainSec / 60.0);
+                    const audio = document.getElementById('bgAudio');
+                    if (audio) audio.volume = fadePercent;
+                }
+            }, 1000);
+        }
+
+        function addCustomTrackPrompt() {
+            const title = prompt("Nhập tên bài hát bạn muốn thêm:", "Bài hát yêu thích 💕");
+            if (!title) return;
+            const url = prompt("Dán link file nhạc MP3 (URL trực tiếp http/https):");
+            if (!url || (!url.startsWith("http://") && !url.startsWith("https://"))) {
+                showToast("⚠️ Link nhạc không hợp lệ! Phải bắt đầu bằng http:// hoặc https://");
+                return;
+            }
+
+            const newTrack = {
+                id: "custom_" + Date.now(),
+                category: "custom",
+                isCustom: true,
+                title: title.trim(),
+                artist: "Bài hát tự thêm cho Công chúa",
+                url: url.trim()
+            };
+
+            customTracks.push(newTrack);
+            localStorage.setItem('lovebot_custom_tracks', JSON.stringify(customTracks));
+            playlist = [...DEFAULT_PLAYLIST, ...customTracks];
+            renderPlaylist();
+            showToast("✨ Đã thêm bài hát vào danh sách!");
+            selectTrack(playlist.length - 1, true);
+        }
+
+        function deleteCustomTrack(id, event) {
+            if (event) event.stopPropagation();
+            if (confirm("Bạn có chắc muốn xóa bài hát này khỏi danh sách?")) {
+                customTracks = customTracks.filter(t => t.id !== id);
+                localStorage.setItem('lovebot_custom_tracks', JSON.stringify(customTracks));
+                playlist = [...DEFAULT_PLAYLIST, ...customTracks];
+                if (currentTrackIdx >= playlist.length) currentTrackIdx = 0;
+                renderPlaylist();
+                showToast("🗑️ Đã xóa bài hát!");
+            }
+        }
+
+        function setMusicMode(mode) {
+            musicMode = mode;
+            localStorage.setItem('lovebot_music_mode', mode);
+            const btnBear = document.getElementById('btnModeBear');
+            const btnDevice = document.getElementById('btnModeDevice');
+            const bearSection = document.getElementById('bearPlayerSection');
+            const ytBox = document.getElementById('youtubePlayerBox');
+
+            if (mode === 'bear') {
+                if (btnBear) btnBear.className = 'mode-btn active mode-bear';
+                if (btnDevice) btnDevice.className = 'mode-btn mode-device';
+                if (bearSection) bearSection.style.display = 'block';
+                if (ytBox) {
+                    ytBox.style.display = 'none';
+                    const iframe = document.getElementById('youtubeIframe');
+                    if (iframe && iframe.src.includes('autoplay=1')) {
+                        iframe.src = iframe.src.replace('autoplay=1', 'autoplay=0');
+                    }
+                }
+            } else {
+                // Chế độ 'youtube'
+                if (btnBear) btnBear.className = 'mode-btn mode-bear';
+                if (btnDevice) btnDevice.className = 'mode-btn active mode-device';
+                if (bearSection) bearSection.style.display = 'none';
+                if (ytBox) {
+                    ytBox.style.display = 'flex';
+                    renderYouTubeSuggestions();
+                }
+                if (isPlayingBear) {
+                    publishCmd({ action: "music", state: "stop" });
+                    isPlayingBear = false;
+                }
+            }
+            updatePlayerUI();
+            renderPlaylist();
+        }
+
+        function togglePlayMusic() {
+            if (musicMode === 'bear') {
+                if (isPlayingBear) {
+                    manualMusicStop = true;
+                    publishCmd({ action: "music", state: "stop" });
+                    isPlayingBear = false;
+                    updatePlayerUI();
+                    showToast("⏹️ Đã dừng phát nhạc trên Gấu");
+                } else {
+                    manualMusicStop = false;
+                    trackPlayStartTime = Date.now();
+                    const tr = playlist[currentTrackIdx];
+                    publishCmd({ action: "music", state: "play", url: tr.url });
+                    isPlayingBear = true;
+                    const audio = document.getElementById('bgAudio');
+                    if (audio) audio.pause();
+                    isPlayingDevice = false;
+                    updatePlayerUI();
+                    showToast("🎵 Đang phát nhạc trên Gấu bông...");
+                }
+            } else {
+                const audio = document.getElementById('bgAudio');
+                if (isPlayingDevice) {
+                    audio.pause();
+                    isPlayingDevice = false;
+                    updatePlayerUI();
+                    showToast("⏸️ Đã tạm dừng nhạc trên máy");
+                } else {
+                    if (isPlayingBear) {
+                        publishCmd({ action: "music", state: "stop" });
+                        isPlayingBear = false;
+                    }
+                    audio.src = playlist[currentTrackIdx].url;
+                    audio.play().then(() => {
+                        isPlayingDevice = true;
+                        updatePlayerUI();
+                        showToast("🎵 Đang phát nhạc trên máy này...");
+                    }).catch(e => {
+                        console.error(e);
+                        showToast("⚠️ Bấm vào màn hình để cho phép phát âm thanh!");
+                    });
+                }
+            }
+            renderPlaylist();
+        }
+
+        function updatePlayerUI() {
+            const btn = document.getElementById('playBtn');
+            const eq = document.getElementById('musicEqualizer');
+            const vinyl = document.getElementById('playerVinylIcon');
+            const isPlaying = (musicMode === 'bear' ? isPlayingBear : isPlayingDevice);
+
+            if (isPlaying) {
+                if (btn) {
+                    btn.innerText = '⏸';
+                    btn.className = 'play-btn playing';
+                }
+                if (eq) eq.style.display = 'inline-flex';
+                if (vinyl) vinyl.style.animation = 'spinVinyl 3s linear infinite';
+            } else {
+                if (btn) {
+                    btn.innerText = '▶';
+                    btn.className = 'play-btn';
+                }
+                if (eq) eq.style.display = 'none';
+                if (vinyl) vinyl.style.animation = 'none';
+            }
+        }
+
+        function selectTrack(idx, autoStart = false) {
+            currentTrackIdx = idx;
+            currentTrackSec = 0;
+            totalTrackSec = 0;
+            updateProgressUI(0, 0);
+            const tr = playlist[currentTrackIdx];
+            document.getElementById('musicTitle').innerText = tr.title;
+            document.getElementById('musicArtist').innerText = tr.artist;
+            const audio = document.getElementById('bgAudio');
+            if (audio) audio.src = tr.url;
+
+            if (musicMode === 'bear') {
+                if (isPlayingBear || autoStart) {
+                    manualMusicStop = false;
+                    trackPlayStartTime = Date.now();
+                    publishCmd({ action: "music", state: "play", url: tr.url });
+                    isPlayingBear = true;
+                    showToast("🎶 Gấu phát bài: " + tr.title);
+                }
+            } else if (musicMode === 'device') {
+                if (isPlayingDevice || autoStart) {
+                    audio.play().then(() => {
+                        isPlayingDevice = true;
+                        updatePlayerUI();
+                        showToast("🎶 Đang phát: " + tr.title);
+                    }).catch(() => {});
+                }
+            }
+            updatePlayerUI();
+            renderPlaylist();
+        }
+
+        // ================= Trình phát YouTube Music Trực Tiếp =================
+        const YOUTUBE_SUGGESTIONS = [
+            { id: "FN7ALfpGxiI", title: "Nơi Này Có Anh - Sơn Tùng M-TP 💖", desc: "Giai điệu tình yêu siêu ngọt ngào dành tặng Hà An" },
+            { id: "s-IYk-bdlgE", title: "Bước Qua Nhau - Vũ 🌧️", desc: "Giai điệu acoustic êm dịu, da diết" },
+            { id: "1P4DaXgzVnE", title: "Ánh Nắng Của Anh - Đức Phúc ☀️", desc: "Lời hứa tình yêu ấm áp như tia nắng ban mai" },
+            { id: "kRvYqzCJ4vw", title: "Lạ Lùng - Vũ ☕", desc: "Bản tình ca acoustic mộc mạc lắng đọng" },
+            { id: "6eONmnFB9sw", title: "Chuyện Đôi Ta - Emcee L ft. Muộii 🌸", desc: "Bản tình ca êm dịu cực kỳ ngọt ngào" },
+            { id: "LspZCNNP6aE", title: "Một Đêm Say - Thịnh Suy 🌙", desc: "Acoustic mộc mạc ru ngủ ấm áp" }
+        ];
+
+        function renderYouTubeSuggestions() {
+            const container = document.getElementById('ytSuggestionsList');
+            if (!container) return;
+            container.innerHTML = '';
+            YOUTUBE_SUGGESTIONS.forEach(item => {
+                const el = document.createElement('div');
+                el.style = "display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 12px; cursor: pointer; transition: all 0.2s;";
+                el.onmouseenter = () => el.style.background = 'rgba(255,255,255,0.08)';
+                el.onmouseleave = () => el.style.background = 'rgba(255,255,255,0.03)';
+                el.onclick = () => playYouTubeId(item.id, item.title);
+                el.innerHTML = `
+                    <div style="flex: 1; overflow: hidden; margin-right: 8px;">
+                        <div style="font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(item.title)}</div>
+                        <div style="font-size: 11px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(item.desc)}</div>
+                    </div>
+                    <span style="font-size: 18px;">▶️</span>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        function extractYouTubeId(url) {
+            if (!url) return null;
+            url = url.trim();
+            if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
+            const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+            if (shortMatch) return shortMatch[1];
+            const longMatch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+            if (longMatch) return longMatch[1];
+            const embedMatch = url.match(/embed\/([a-zA-Z0-9_-]{11})/);
+            if (embedMatch) return embedMatch[1];
+            return null;
+        }
+
+        function playYouTubeId(id, title = '') {
+            const iframe = document.getElementById('youtubeIframe');
+            if (iframe) {
+                iframe.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&enablejsapi=1`;
+            }
+            if (title) showToast("▶️ Đang phát: " + title);
+            else showToast("▶️ Đang phát video YouTube...");
+        }
+
+        function playCustomYouTube() {
+            const input = document.getElementById('ytUrlInput');
+            if (!input || !input.value.trim()) {
+                showToast("⚠️ Vui lòng dán link hoặc mã video YouTube!");
+                return;
+            }
+            const val = input.value.trim();
+            const id = extractYouTubeId(val);
+            if (id) {
+                playYouTubeId(id);
+                input.value = '';
+            } else {
+                showToast("⚠️ Link YouTube không hợp lệ! Vui lòng kiểm tra lại link.");
+            }
+        }
+
+        // ================= Quản lý Loa phát giọng nói Robot (Gấu / Máy) =================
+        function setVoiceOutput(mode) {
+            voiceOutputMode = mode;
+            localStorage.setItem('lovebot_voice_mode', mode);
+            const b = document.getElementById('btnVoiceBear');
+            const d = document.getElementById('btnVoiceDevice');
+            if (b && d) {
+                b.className = 'mini-opt-btn' + (mode === 'bear' ? ' active' : '');
+                d.className = 'mini-opt-btn' + (mode === 'device' ? ' active' : '');
+            }
+            showToast(mode === 'bear' ? "🧸 Đã chọn loa Gấu bông phát giọng nói" : "📱 Đã chọn loa Điện thoại phát giọng nói");
+        }
+
+        function speakOnDevice(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'vi-VN';
+            u.rate = 1.0;
+            u.pitch = 1.1;
+            window.speechSynthesis.speak(u);
+        }
+
+        // Khởi động hệ thống âm thanh & playlist
+        initMusicSystem();
+    </script>
+</body>
+</html>
