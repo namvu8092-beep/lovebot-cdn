@@ -226,130 +226,187 @@
             cursor: pointer;
         }
 
-        /* Floating Vertical Volume HUD (Mép phải màn hình) */
-        .floating-vol-hud {
+        /* ================= BONG BÓNG GẤU BÔNG CHỈNH ÂM LƯỢNG SIÊU CUTE ================= */
+        .bear-bubble-container {
             position: fixed;
             right: 18px;
-            top: 50%;
-            transform: translateY(-50%);
+            bottom: 110px;
             z-index: 999;
-            background: rgba(18, 22, 42, 0.88);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            border-radius: 30px;
-            padding: 12px 6px;
-            width: 48px;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 8px;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55), 0 0 20px var(--primary-glow);
+            flex-direction: row-reverse;
+            gap: 10px;
             user-select: none;
             -webkit-user-select: none;
-            touch-action: none;
-            transition: transform 0.2s, box-shadow 0.2s;
         }
-        .floating-vol-hud:hover {
-            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65), 0 0 28px rgba(255, 59, 129, 0.4);
-            border-color: rgba(255, 59, 129, 0.4);
+
+        /* Nút quả bóng gấu nổi chính */
+        .bear-bubble-btn {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, #3b1d5a 0%, #15182e 80%);
+            border: 2px solid rgba(255, 59, 129, 0.55);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(255, 59, 129, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s;
+            animation: bearFloat 3.6s ease-in-out infinite;
         }
-        .vol-hud-btn {
+        .bear-bubble-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 59, 129, 0.65);
+            border-color: #ff3b81;
+        }
+        .bear-bubble-btn:active {
+            transform: scale(0.92);
+        }
+
+        @keyframes bearFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-7px); }
+        }
+
+        .bear-bubble-img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            pointer-events: none;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.35));
+            border-radius: 50%;
+        }
+
+        /* Huy hiệu % âm lượng nhỏ xíu dưới quả bóng gấu */
+        .bear-bubble-badge {
+            position: absolute;
+            bottom: -3px;
+            right: -3px;
+            background: linear-gradient(135deg, #ff3b81, #d946ef);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 1px 5px;
+            border-radius: 10px;
+            border: 1.5px solid #0b0d19;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            letter-spacing: -0.2px;
+        }
+
+        /* Khung điều khiển mở rộng khi chạm vào gấu */
+        .bear-vol-panel {
+            background: rgba(18, 22, 42, 0.95);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 20px;
+            padding: 12px 14px;
+            width: 220px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 22px rgba(255, 59, 129, 0.25);
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            animation: panelPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            transform-origin: right center;
+        }
+        .bear-vol-panel.show {
+            display: flex;
+        }
+
+        @keyframes panelPop {
+            0% { opacity: 0; transform: scale(0.85) translateX(12px); }
+            100% { opacity: 1; transform: scale(1) translateX(0); }
+        }
+
+        .bear-vol-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .bear-vol-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .bear-vol-percent {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .bear-vol-slider-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .bear-vol-icon-btn {
             background: none;
             border: none;
-            font-size: 19px;
+            font-size: 17px;
             cursor: pointer;
             padding: 2px;
             line-height: 1;
             transition: transform 0.15s;
         }
-        .vol-hud-btn:active { transform: scale(0.85); }
-        .vol-hud-val {
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--primary);
-            text-align: center;
-            letter-spacing: -0.3px;
-        }
-        .vol-track-container {
-            position: relative;
-            width: 16px;
-            height: 140px;
+        .bear-vol-icon-btn:active { transform: scale(0.85); }
+        .bear-vol-slider {
+            flex: 1;
+            accent-color: var(--primary);
+            height: 7px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 4px;
             cursor: pointer;
+            outline: none;
+        }
+
+        .bear-vol-presets {
             display: flex;
-            justify-content: center;
-            align-items: center;
+            gap: 5px;
+            justify-content: space-between;
+        }
+        .bear-preset-chip {
+            flex: 1;
             padding: 4px 0;
-        }
-        .vol-track-bg {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 8px;
-            background: rgba(255, 255, 255, 0.12);
-            border-radius: 6px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-        }
-        .vol-track-fill {
-            width: 100%;
-            background: linear-gradient(to top, #ff3b81, #d946ef);
-            border-radius: 6px;
-            transition: height 0.05s ease-out;
-            box-shadow: 0 0 10px rgba(255, 59, 129, 0.6);
-        }
-        .vol-track-thumb {
-            position: absolute;
-            left: 50%;
-            transform: translate(-50%, 50%);
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #fff;
-            border: 2px solid #ff3b81;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 10px var(--primary-glow);
-            pointer-events: none;
-            transition: bottom 0.05s ease-out;
-        }
-        .vol-hud-stepper {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            width: 100%;
-            align-items: center;
-        }
-        .vol-step-btn {
-            background: rgba(255, 255, 255, 0.07);
+            text-align: center;
+            background: rgba(255, 255, 255, 0.06);
             border: 1px solid var(--card-border);
-            border-radius: 12px;
+            border-radius: 8px;
             color: var(--text-dim);
-            font-size: 13px;
-            font-weight: 700;
-            width: 30px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.15s;
         }
-        .vol-step-btn:hover {
+        .bear-preset-chip:hover {
             background: rgba(255, 59, 129, 0.2);
             color: #fff;
             border-color: rgba(255, 59, 129, 0.4);
         }
-        .vol-step-btn:active { transform: scale(0.9); }
+        .bear-preset-chip:active { transform: scale(0.92); }
 
         @media (max-width: 600px) {
-            .floating-vol-hud {
-                right: 8px;
-                padding: 10px 4px;
-                width: 44px;
+            .bear-bubble-container {
+                right: 10px;
+                bottom: 85px;
             }
-            .vol-track-container {
-                height: 115px;
+            .bear-bubble-btn {
+                width: 52px;
+                height: 52px;
+            }
+            .bear-bubble-img {
+                width: 44px;
+                height: 44px;
+            }
+            .bear-vol-panel {
+                width: 195px;
+                padding: 10px 12px;
             }
         }
 
@@ -1150,23 +1207,32 @@
     <!-- Toast notification -->
     <div id="toast">Đã gửi thành công! 💖</div>
 
-    <!-- Floating Vertical Volume HUD (Thanh âm lượng dọc mép phải màn hình) -->
-    <div id="floatingVolHud" class="floating-vol-hud" title="Kéo hoặc chạm để chỉnh âm lượng gấu">
-        <button type="button" id="volHudMuteBtn" class="vol-hud-btn" onclick="toggleMuteVolume()" title="Bật / Tắt tiếng">🔊</button>
-        <span id="volHudValue" class="vol-hud-val">80%</span>
-        
-        <div class="vol-track-container" id="volTrackContainer" 
-             onmousedown="startVolDrag(event)" 
-             ontouchstart="startVolDrag(event)">
-            <div class="vol-track-bg">
-                <div class="vol-track-fill" id="volTrackFill" style="height: 80%;"></div>
-            </div>
-            <div class="vol-track-thumb" id="volTrackThumb" style="bottom: 80%;"></div>
+    <!-- Bong bóng Gấu bông chỉnh âm lượng siêu cute (Floating Bear Bubble) -->
+    <div id="bearBubbleContainer" class="bear-bubble-container">
+        <!-- Nút quả bóng gấu nổi -->
+        <div id="bearBubbleBtn" class="bear-bubble-btn" onclick="toggleBearVolPanel(event)" title="Chạm để chỉnh âm lượng Bé Gấu 💖">
+            <img src="bear_bubble.png" alt="LoveBot Bear" class="bear-bubble-img" id="bearBubbleImg">
+            <span id="bearVolBadge" class="bear-bubble-badge">80%</span>
         </div>
 
-        <div class="vol-hud-stepper">
-            <button type="button" class="vol-step-btn" onclick="stepVolume(5)" title="Tăng âm lượng">＋</button>
-            <button type="button" class="vol-step-btn" onclick="stepVolume(-5)" title="Giảm âm lượng">－</button>
+        <!-- Khung chỉnh âm lượng bật ra khi chạm vào gấu -->
+        <div id="bearVolPanel" class="bear-vol-panel" onclick="event.stopPropagation()">
+            <div class="bear-vol-header">
+                <span class="bear-vol-title">🧸 Âm lượng gấu</span>
+                <span id="bearVolText" class="bear-vol-percent">80%</span>
+            </div>
+            
+            <div class="bear-vol-slider-row">
+                <button type="button" class="bear-vol-icon-btn" id="bearMuteBtn" onclick="toggleMuteVolume()" title="Bật / Tắt tiếng">🔊</button>
+                <input type="range" min="0" max="100" value="80" id="bearVolSlider" class="bear-vol-slider" oninput="changeVolume(this.value)">
+            </div>
+
+            <div class="bear-vol-presets">
+                <button type="button" class="bear-preset-chip" onclick="changeVolume(0)">Tắt</button>
+                <button type="button" class="bear-preset-chip" onclick="changeVolume(30)">30%</button>
+                <button type="button" class="bear-preset-chip" onclick="changeVolume(60)">60%</button>
+                <button type="button" class="bear-preset-chip" onclick="changeVolume(100)">100%</button>
+            </div>
         </div>
     </div>
 
@@ -1387,7 +1453,7 @@
                     }
                 }
 
-                if (data.volume !== undefined && !isVolumeDragging && !isVolHudDragging) {
+                if (data.volume !== undefined && !isVolumeDragging) {
                     updateVolumeUI(data.volume);
                 }
             } catch (e) {
@@ -1556,37 +1622,37 @@
             document.getElementById('speakInput').value = s;
             sendSpeak();
         }
-
         let lastNonZeroVolume = 80;
-        let isVolHudDragging = false;
+        let bearVolTimeout = null;
 
         function updateVolumeUI(val) {
             val = Math.max(0, Math.min(100, parseInt(val) || 0));
-            
-            const hudVal = document.getElementById('volHudValue');
-            const hudFill = document.getElementById('volTrackFill');
-            const hudThumb = document.getElementById('volTrackThumb');
-            const hudBtn = document.getElementById('volHudMuteBtn');
 
-            if (hudVal) hudVal.innerText = val + '%';
-            if (hudFill) hudFill.style.height = val + '%';
-            if (hudThumb) hudThumb.style.bottom = val + '%';
-            if (hudBtn) {
-                if (val === 0) hudBtn.innerText = '🔇';
-                else if (val < 40) hudBtn.innerText = '🔉';
-                else hudBtn.innerText = '🔊';
+            // Cập nhật huy hiệu trên quả bóng gấu và bảng điều khiển
+            const badge = document.getElementById('bearVolBadge');
+            const volText = document.getElementById('bearVolText');
+            const slider = document.getElementById('bearVolSlider');
+            const muteBtn = document.getElementById('bearMuteBtn');
+
+            if (badge) badge.innerText = val + '%';
+            if (volText) volText.innerText = val + '%';
+            if (slider) slider.value = val;
+            if (muteBtn) {
+                if (val === 0) muteBtn.innerText = '🔇';
+                else if (val < 40) muteBtn.innerText = '🔉';
+                else muteBtn.innerText = '🔊';
             }
 
+            // Đồng bộ thanh trượt trong trang cài đặt (nếu có)
             const v1 = document.getElementById('volumeSlider');
-            const v2 = document.getElementById('musicVolumeSlider');
             const l1 = document.getElementById('volumeValue');
-            const l2 = document.getElementById('musicVolVal');
             if (v1) v1.value = val;
-            if (v2) v2.value = val;
             if (l1) l1.innerText = val + '%';
-            if (l2) l2.innerText = val + '%';
 
             if (val > 0) lastNonZeroVolume = val;
+            if (document.getElementById('bearVolPanel')?.classList.contains('show')) {
+                resetBearVolAutoClose();
+            }
         }
 
         function changeVolume(val) {
@@ -1601,13 +1667,8 @@
             }, 80);
         }
 
-        function stepVolume(delta) {
-            const current = parseInt(document.getElementById('volHudValue')?.innerText) || 80;
-            changeVolume(current + delta);
-        }
-
         function toggleMuteVolume() {
-            const current = parseInt(document.getElementById('volHudValue')?.innerText) || 0;
+            const current = parseInt(document.getElementById('bearVolSlider')?.value) || 0;
             if (current > 0) {
                 changeVolume(0);
             } else {
@@ -1615,40 +1676,46 @@
             }
         }
 
-        function handleVolPointerMove(e) {
-            const container = document.getElementById('volTrackContainer');
-            if (!container) return;
-            const rect = container.getBoundingClientRect();
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            
-            // 0% ở đáy container, 100% ở đỉnh container
-            let pct = 1.0 - ((clientY - rect.top) / rect.height);
-            pct = Math.max(0, Math.min(1, pct));
-            const val = Math.round(pct * 100);
-            changeVolume(val);
+        function toggleBearVolPanel(e) {
+            if (e) e.stopPropagation();
+            const panel = document.getElementById('bearVolPanel');
+            if (!panel) return;
+            const isShown = panel.classList.contains('show');
+            if (isShown) {
+                closeBearVolPanel();
+            } else {
+                openBearVolPanel();
+            }
         }
 
-        function startVolDrag(e) {
-            isVolHudDragging = true;
-            handleVolPointerMove(e);
-            
-            const onMove = (ev) => {
-                if (ev.cancelable) ev.preventDefault();
-                handleVolPointerMove(ev);
-            };
-            const onUp = () => {
-                isVolHudDragging = false;
-                window.removeEventListener('mousemove', onMove);
-                window.removeEventListener('mouseup', onUp);
-                window.removeEventListener('touchmove', onMove);
-                window.removeEventListener('touchend', onUp);
-            };
-
-            window.addEventListener('mousemove', onMove, { passive: false });
-            window.addEventListener('mouseup', onUp);
-            window.addEventListener('touchmove', onMove, { passive: false });
-            window.addEventListener('touchend', onUp);
+        function openBearVolPanel() {
+            const panel = document.getElementById('bearVolPanel');
+            if (!panel) return;
+            panel.classList.add('show');
+            resetBearVolAutoClose();
         }
+
+        function closeBearVolPanel() {
+            const panel = document.getElementById('bearVolPanel');
+            if (panel) panel.classList.remove('show');
+            if (bearVolTimeout) clearTimeout(bearVolTimeout);
+        }
+
+        function resetBearVolAutoClose() {
+            if (bearVolTimeout) clearTimeout(bearVolTimeout);
+            // Tự động thu gọn quả bóng sau 4.5 giây không thao tác để không che màn hình
+            bearVolTimeout = setTimeout(() => {
+                closeBearVolPanel();
+            }, 4500);
+        }
+
+        // Tự động thu gọn khi bấm ra ngoài vùng bong bóng gấu
+        document.addEventListener('click', (e) => {
+            const container = document.getElementById('bearBubbleContainer');
+            if (container && !container.contains(e.target)) {
+                closeBearVolPanel();
+            }
+        });
 
         // Khởi tạo mức âm lượng mặc định 80%
         updateVolumeUI(80);
